@@ -11,6 +11,12 @@ internal/adapters/epub/
 ├── ERROR_CODES.md               # Complete error code reference
 ├── container_validator.go       # Container validation implementation
 ├── container_validator_test.go  # Unit tests with fixtures
+├── content_validator.go         # Content document validation
+├── content_validator_test.go    # Content validation tests
+├── opf_validator.go             # OPF package document validation
+├── opf_validator_test.go        # OPF validation tests
+├── nav_validator.go             # Navigation document validation
+├── nav_validator_test.go        # Navigation validation tests
 └── integration_test.go          # Integration tests
 ```
 
@@ -28,9 +34,57 @@ Implements OCF 3.0 specification section 3.1 container validation:
 **Files:**
 - `container_validator.go` - Implementation
 - `container_validator_test.go` - Comprehensive unit tests
+
+### Content Validator
+
+Implements EPUB content document validation:
+
+- ✅ XHTML well-formedness validation
+- ✅ DOCTYPE validation
+- ✅ Required elements (html, head, body)
+- ✅ XHTML namespace validation
+
+**Files:**
+- `content_validator.go` - Implementation
+- `content_validator_test.go` - Comprehensive unit tests
+
+### OPF Validator
+
+Implements EPUB package document (OPF) validation:
+
+- ✅ OPF XML structure validation
+- ✅ Required metadata validation
+- ✅ Manifest validation
+- ✅ Spine validation
+- ✅ Navigation document reference validation
+
+**Files:**
+- `opf_validator.go` - Implementation
+- `opf_validator_test.go` - Comprehensive unit tests
+
+### Navigation Validator
+
+Implements EPUB 3 navigation document validation:
+
+- ✅ Navigation document well-formedness
+- ✅ Required TOC validation (`<nav epub:type="toc">`)
+- ✅ Optional landmarks validation
+- ✅ Nested `<ol>` structure validation
+- ✅ Relative link validation
+- ✅ Link extraction
+
+**Files:**
+- `nav_validator.go` - Implementation
+- `nav_validator_test.go` - Comprehensive unit tests
+
+### Integration Tests
+
+**Files:**
 - `integration_test.go` - Integration tests with fixtures
 
 ## Quick Start
+
+### Container Validation
 
 ```go
 import "github.com/example/project/internal/adapters/epub"
@@ -56,9 +110,33 @@ for _, rf := range result.Rootfiles {
 }
 ```
 
+### Navigation Validation
+
+```go
+import "github.com/example/project/internal/adapters/epub"
+
+validator := epub.NewNavValidator()
+result, err := validator.ValidateFile("path/to/nav.xhtml")
+
+if err != nil {
+    log.Fatal(err)
+}
+
+if !result.Valid {
+    for _, e := range result.Errors {
+        fmt.Printf("[%s] %s\n", e.Code, e.Message)
+    }
+}
+
+// Access navigation links
+for _, link := range result.TOCLinks {
+    fmt.Printf("TOC: %s -> %s\n", link.Text, link.Href)
+}
+```
+
 ## Error Codes
 
-All error codes follow the format `EPUB-CONTAINER-XXX`:
+### Container Validation (`EPUB-CONTAINER-XXX`)
 
 | Code | Description |
 |------|-------------|
@@ -67,6 +145,17 @@ All error codes follow the format `EPUB-CONTAINER-XXX`:
 | 003 | Mimetype Not First |
 | 004 | Container XML Missing |
 | 005 | Container XML Invalid |
+
+### Navigation Validation (`EPUB-NAV-XXX`)
+
+| Code | Description |
+|------|-------------|
+| 001 | Not Well-Formed |
+| 002 | Missing TOC |
+| 003 | Invalid TOC Structure |
+| 004 | Invalid Links |
+| 005 | Invalid Landmarks |
+| 006 | Missing Nav Element |
 
 See [ERROR_CODES.md](ERROR_CODES.md) for complete details.
 
@@ -138,13 +227,12 @@ The validator is:
 
 Potential additions (not yet implemented):
 
-- EPUB 2.0 vs 3.0 validation
-- Package document (OPF) validation
-- Navigation document validation
+- EPUB 2.0 vs 3.0 version detection
 - Media type validation
 - Fallback chain validation
 - Encryption.xml handling
 - Signature validation
+- Cross-reference validation between OPF and actual files
 
 ## Contributing
 

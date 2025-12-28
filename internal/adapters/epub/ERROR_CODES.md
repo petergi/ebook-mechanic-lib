@@ -1,6 +1,6 @@
-# EPUB Container Validation Error Codes
+# EPUB Validation Error Codes
 
-This document provides a complete reference for all error codes used by the EPUB container validator, aligned with EPUB OCF specification section 3.1.
+This document provides a complete reference for all error codes used by the EPUB validators, aligned with EPUB specifications.
 
 ## Error Code Reference
 
@@ -246,5 +246,255 @@ if !result.Valid {
             // Handle invalid container.xml
         }
     }
+}
+```
+
+---
+
+## Navigation Document Error Codes
+
+### EPUB-NAV-001: Not Well-Formed
+
+**Severity:** Error  
+**Description:** The navigation document is not well-formed XHTML.
+
+**Common Causes:**
+- XML/XHTML syntax errors
+- Unclosed tags
+- Invalid character encoding
+- Malformed HTML structure
+
+**Example:**
+```json
+{
+  "code": "EPUB-NAV-001",
+  "message": "Navigation document is not well-formed XHTML",
+  "details": {
+    "error": "XML syntax error at line 5"
+  }
+}
+```
+
+**Resolution:** Fix the XHTML syntax errors in the navigation document.
+
+---
+
+### EPUB-NAV-002: Missing TOC
+
+**Severity:** Error  
+**Description:** The navigation document does not contain a required `<nav epub:type="toc">` element.
+
+**Common Causes:**
+- Missing TOC navigation element
+- Incorrect epub:type attribute value
+- TOC element not marked with proper namespace
+
+**Example:**
+```json
+{
+  "code": "EPUB-NAV-002",
+  "message": "Navigation document must contain <nav epub:type=\"toc\">",
+  "details": {}
+}
+```
+
+**Resolution:** Add a `<nav epub:type="toc">` element containing the table of contents.
+
+---
+
+### EPUB-NAV-003: Invalid TOC Structure
+
+**Severity:** Error  
+**Description:** The TOC navigation element does not have the required `<ol>` structure.
+
+**Common Causes:**
+- Missing `<ol>` element within TOC nav
+- TOC nav contains only text or other elements
+- Incorrect nesting of navigation structure
+
+**Example:**
+```json
+{
+  "code": "EPUB-NAV-003",
+  "message": "TOC <nav> element must contain an <ol> element",
+  "details": {}
+}
+```
+
+**Resolution:** Ensure the `<nav epub:type="toc">` element contains an ordered list (`<ol>`) with navigation items.
+
+---
+
+### EPUB-NAV-004: Invalid Links
+
+**Severity:** Error  
+**Description:** The navigation document contains invalid or non-relative links.
+
+**Common Causes:**
+- Absolute URLs (http://, https://)
+- Protocol-relative URLs (//)
+- Absolute paths (starting with /)
+- Links pointing outside the EPUB package (..)
+- Empty href attributes
+
+**Examples:**
+
+Absolute URL:
+```json
+{
+  "code": "EPUB-NAV-004",
+  "message": "TOC contains invalid relative link: http://example.com/chapter.xhtml",
+  "details": {
+    "href": "http://example.com/chapter.xhtml",
+    "text": "Chapter 1"
+  }
+}
+```
+
+Empty link:
+```json
+{
+  "code": "EPUB-NAV-004",
+  "message": "TOC contains invalid relative link: ",
+  "details": {
+    "href": "",
+    "text": "Invalid Link"
+  }
+}
+```
+
+**Resolution:** Use only relative links within the EPUB package (e.g., "chapter1.xhtml", "content/chapter2.xhtml#section1").
+
+---
+
+### EPUB-NAV-005: Invalid Landmarks
+
+**Severity:** Error  
+**Description:** The landmarks navigation element does not have the required `<ol>` structure.
+
+**Common Causes:**
+- Missing `<ol>` element within landmarks nav
+- Landmarks nav contains only text or other elements
+- Incorrect nesting of landmarks structure
+
+**Example:**
+```json
+{
+  "code": "EPUB-NAV-005",
+  "message": "Landmarks <nav> element must contain an <ol> element",
+  "details": {}
+}
+```
+
+**Resolution:** Ensure the `<nav epub:type="landmarks">` element contains an ordered list (`<ol>`) with landmark items.
+
+---
+
+### EPUB-NAV-006: Missing Nav Element
+
+**Severity:** Error  
+**Description:** The navigation document does not contain any `<nav>` elements.
+
+**Common Causes:**
+- Using `<div>` or other elements instead of `<nav>`
+- Missing navigation structure entirely
+- Navigation content not properly wrapped
+
+**Example:**
+```json
+{
+  "code": "EPUB-NAV-006",
+  "message": "Navigation document must contain at least one <nav> element",
+  "details": {}
+}
+```
+
+**Resolution:** Add at least one `<nav>` element with proper epub:type attribute to the navigation document.
+
+---
+
+## Navigation Document Validation Flow
+
+```
+┌─────────────────────────┐
+│ Parse Navigation Doc    │
+└──────┬──────────────────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ Check Well-Formedness   │───► EPUB-NAV-001
+└──────┬──────────────────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ Find <nav> Elements     │───► EPUB-NAV-006
+└──────┬──────────────────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ Validate TOC Present    │───► EPUB-NAV-002
+└──────┬──────────────────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ Validate TOC Structure  │───► EPUB-NAV-003
+│ - Must have <ol>        │
+│ - Extract links         │
+└──────┬──────────────────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ Validate Links          │───► EPUB-NAV-004
+│ - Must be relative      │
+│ - No absolute URLs      │
+│ - No parent refs (..)   │
+└──────┬──────────────────┘
+       │
+       ▼
+┌─────────────────────────┐
+│ Validate Landmarks      │───► EPUB-NAV-005
+│ (if present)            │───► EPUB-NAV-004
+│ - Must have <ol>        │
+│ - Validate links        │
+└─────────────────────────┘
+```
+
+## Navigation Document Usage Example
+
+```go
+validator := epub.NewNavValidator()
+result, err := validator.ValidateFile("OEBPS/nav.xhtml")
+
+if err != nil {
+    // I/O error occurred
+    log.Fatal(err)
+}
+
+if !result.Valid {
+    for _, validationError := range result.Errors {
+        switch validationError.Code {
+        case epub.ErrorCodeNavNotWellFormed:
+            // Handle malformed XHTML
+        case epub.ErrorCodeNavMissingTOC:
+            // Handle missing TOC
+        case epub.ErrorCodeNavInvalidTOCStructure:
+            // Handle invalid TOC structure
+        case epub.ErrorCodeNavInvalidLinks:
+            // Handle invalid links
+        case epub.ErrorCodeNavInvalidLandmarks:
+            // Handle invalid landmarks
+        case epub.ErrorCodeNavMissingNavElement:
+            // Handle missing nav element
+        }
+    }
+}
+
+// Access extracted navigation data
+for _, link := range result.TOCLinks {
+    fmt.Printf("TOC: %s -> %s\n", link.Text, link.Href)
+}
+
+for _, link := range result.LandmarkLinks {
+    fmt.Printf("Landmark: %s -> %s\n", link.Text, link.Href)
 }
 ```

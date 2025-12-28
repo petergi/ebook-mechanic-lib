@@ -1,6 +1,6 @@
-# EPUB Container Validator
+# EPUB Validators
 
-Implementation of OCF (Open Container Format) validation for EPUB files according to the EPUB specification section 3.1.
+Implementation of EPUB validation according to the EPUB specifications.
 
 ## Features
 
@@ -137,3 +137,164 @@ This implementation follows the EPUB Open Container Format (OCF) specification s
 - The validator is designed to be stateless and thread-safe
 - Validation errors are accumulated rather than failing fast, providing complete feedback
 - The API distinguishes between I/O errors (returned as `error`) and validation errors (in `ValidationResult`)
+
+---
+
+# EPUB Navigation Document Validator
+
+Implementation of navigation document validation for EPUB 3 files according to the EPUB 3 specification.
+
+## Features
+
+### Navigation Validation
+- **Well-Formedness Check**: Verifies the navigation document is valid XHTML
+- **TOC Validation**:
+  - Ensures presence of `<nav epub:type="toc">` element
+  - Validates nested `<ol>` structure within TOC
+  - Extracts all TOC links with their text
+- **Landmarks Validation** (optional):
+  - Validates `<nav epub:type="landmarks">` element if present
+  - Ensures nested `<ol>` structure within landmarks
+  - Extracts all landmark links
+- **Relative Link Validation**:
+  - Ensures all links are relative (no absolute URLs)
+  - Rejects protocol-relative URLs (`//example.com`)
+  - Rejects absolute paths (`/path/to/file`)
+  - Rejects parent directory references (`../`)
+  - Allows fragment-only links (`#section1`)
+  - Allows subdirectory paths (`content/chapter1.xhtml`)
+
+## Error Codes
+
+| Code | Description |
+|------|-------------|
+| `EPUB-NAV-001` | Navigation document is not well-formed XHTML |
+| `EPUB-NAV-002` | Missing required `<nav epub:type="toc">` element |
+| `EPUB-NAV-003` | TOC navigation element missing required `<ol>` structure |
+| `EPUB-NAV-004` | Navigation contains invalid relative links |
+| `EPUB-NAV-005` | Landmarks navigation element missing required `<ol>` structure |
+| `EPUB-NAV-006` | Navigation document missing any `<nav>` elements |
+
+## Usage
+
+```go
+import "github.com/example/project/internal/adapters/epub"
+
+validator := epub.NewNavValidator()
+
+// Validate from file path
+result, err := validator.ValidateFile("path/to/nav.xhtml")
+if err != nil {
+    // Handle I/O errors
+}
+
+// Validate from byte slice
+result, err := validator.ValidateBytes(navData)
+if err != nil {
+    // Handle validation errors
+}
+
+// Check results
+if !result.Valid {
+    for _, validationError := range result.Errors {
+        fmt.Printf("Error [%s]: %s\n", validationError.Code, validationError.Message)
+        fmt.Printf("Details: %v\n", validationError.Details)
+    }
+}
+
+// Access extracted navigation data
+fmt.Printf("Has TOC: %v\n", result.HasTOC)
+fmt.Printf("Has Landmarks: %v\n", result.HasLandmarks)
+
+for _, link := range result.TOCLinks {
+    fmt.Printf("TOC Link: %s -> %s\n", link.Text, link.Href)
+}
+
+for _, link := range result.LandmarkLinks {
+    fmt.Printf("Landmark: %s -> %s\n", link.Text, link.Href)
+}
+```
+
+## API
+
+### Types
+
+#### `NavValidator`
+Main validator struct with methods for validating EPUB navigation documents.
+
+#### `NavValidationResult`
+Contains validation results:
+- `Valid` (bool): Overall validation status
+- `Errors` ([]ValidationError): List of validation errors
+- `HasTOC` (bool): Whether a TOC navigation element was found
+- `HasLandmarks` (bool): Whether a landmarks navigation element was found
+- `TOCLinks` ([]NavLink): Extracted TOC links
+- `LandmarkLinks` ([]NavLink): Extracted landmark links
+
+#### `NavLink`
+Represents a navigation link:
+- `Href` (string): Link target (relative path)
+- `Text` (string): Link text content
+
+#### `ValidationError`
+Represents a single validation error:
+- `Code` (string): Error code (e.g., "EPUB-NAV-001")
+- `Message` (string): Human-readable error message
+- `Details` (map[string]interface{}): Additional error details
+
+### Methods
+
+#### `NewNavValidator() *NavValidator`
+Creates a new navigation validator instance.
+
+#### `ValidateFile(filePath string) (*NavValidationResult, error)`
+Validates a navigation document from a file path. Returns an error only for I/O issues.
+
+#### `Validate(reader io.Reader) (*NavValidationResult, error)`
+Validates a navigation document from a reader. Returns an error only for I/O issues.
+
+#### `ValidateBytes(data []byte) (*NavValidationResult, error)`
+Validates a navigation document from a byte slice. Returns an error only for I/O issues.
+
+## Test Coverage
+
+The implementation includes comprehensive unit tests covering:
+
+1. ✅ Valid navigation with TOC
+2. ✅ Valid navigation with TOC and landmarks
+3. ✅ Missing TOC (error)
+4. ✅ Missing `<ol>` in TOC (error)
+5. ✅ Invalid links (absolute URLs, protocol-relative, absolute paths)
+6. ✅ Malformed XHTML
+7. ✅ Missing `<nav>` element
+8. ✅ Empty links (error)
+9. ✅ Protocol-relative URLs (error)
+10. ✅ Landmarks missing `<ol>` (error)
+11. ✅ Complex nested navigation structure
+12. ✅ File path validation
+13. ✅ Non-existent file handling
+14. ✅ Empty content handling
+15. ✅ Link validation edge cases
+16. ✅ Error code constants
+
+All tests use programmatically generated XHTML fixtures to ensure correctness and maintainability.
+
+## EPUB 3 Specification Compliance
+
+This implementation follows the EPUB 3 specification for navigation documents:
+
+- The navigation document MUST contain at least one `<nav>` element
+- At least one `<nav>` element MUST have `epub:type="toc"`
+- TOC and landmarks `<nav>` elements MUST contain an ordered list (`<ol>`)
+- Navigation links MUST be relative within the EPUB package
+- Landmarks are optional but validated if present
+
+## Implementation Notes
+
+- The validator uses `golang.org/x/net/html` for HTML parsing
+- HTML parser is lenient with minor formatting issues but strict on structure
+- The validator extracts and validates all links, including nested structures
+- Link validation ensures EPUB portability by rejecting external references
+- The validator is designed to be stateless and thread-safe
+- Validation errors are accumulated rather than failing fast, providing complete feedback
+- The API distinguishes between I/O errors (returned as `error`) and validation errors (in `NavValidationResult`)
