@@ -1,0 +1,2 @@
+Sample test data file
+This file can be used in tests
