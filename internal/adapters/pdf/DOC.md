@@ -289,6 +289,66 @@ startxref
 "Something is wrong with the PDF"
 ```
 
+## Repair Service
+
+The PDF Repair Service provides safe, automated repairs for basic PDF structural issues. It follows a preview/apply workflow to ensure safety and transparency.
+
+### Key Features
+
+- **Preview Before Apply**: Inspect all proposed repairs before applying them
+- **Safe Repairs Only**: Only automates non-destructive repairs
+- **Backup Management**: Automatic backup creation before modifications
+- **Detailed Reporting**: Action-level repair information
+- **Error Classification**: Distinguishes safe vs. unsafe repairs
+
+### Supported Repairs
+
+**Automated (Safe)**:
+- Append missing `%%EOF` markers (PDF-TRAILER-003)
+- Recompute incorrect `startxref` offsets (PDF-TRAILER-001)
+- Fix minor trailer dictionary typos (PDF-TRAILER-002)
+
+**Requires Manual Intervention**:
+- Header modifications (PDF-HEADER-001/002)
+- Cross-reference table rebuild (PDF-XREF-001/002/003)
+- Catalog repairs (PDF-CATALOG-001/002/003)
+- Font embedding and subsetting
+- Compression scheme changes
+- Structure tree modifications
+
+### Usage Example
+
+```go
+repairService := pdf.NewRepairService()
+validator := pdf.NewStructureValidator()
+
+// Validate
+result, _ := validator.ValidateFile("broken.pdf")
+report := convertToReport("broken.pdf", result)
+
+// Preview repairs
+preview, _ := repairService.Preview(ctx, report)
+
+// Apply if safe
+if preview.CanAutoRepair {
+    result, _ := repairService.Apply(ctx, "broken.pdf", preview)
+    fmt.Printf("Repaired: %s\n", result.BackupPath)
+}
+```
+
+### Documentation
+
+- **[REPAIR_README.md](./REPAIR_README.md)**: Complete API documentation and usage examples
+- **[REPAIR_LIMITATIONS.md](./REPAIR_LIMITATIONS.md)**: Safety guidelines and limitations for each repair type
+
+### Design Principles
+
+1. **Safety First**: Never modify original file directly
+2. **Transparency**: Always show what will be changed
+3. **Conservative Approach**: Only automate safe repairs
+4. **Backup Always**: Create backups before any modification
+5. **Clear Communication**: Explain why manual intervention is needed
+
 ## Future Enhancements
 
 ### Phase 2: PDF/A Validation
@@ -304,10 +364,12 @@ startxref
 - Language tagging
 
 ### Additional Features
-- Repair suggestions
+- ✅ Repair service (implemented)
 - Performance profiling
 - Validation reports (JSON/HTML)
 - Batch validation support
+- Stream-based repairs for large files
+- Metadata repair implementation
 
 ## References
 
@@ -315,3 +377,4 @@ startxref
 - **unipdf Documentation**: https://github.com/unidoc/unipdf
 - **Project Spec**: docs/specs/EBMLib-PDF-SPEC.md
 - **ADR-003**: docs/adr/ADR-003-unipdf-over-pdfcpu.md
+- **Error Codes**: [ERROR_CODES.md](./ERROR_CODES.md)

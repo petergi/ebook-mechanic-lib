@@ -437,17 +437,55 @@ if !result.Valid {
 
 ## Repair Strategy
 
-For information about which errors can be safely repaired, see the main specification document at `docs/specs/EBMLib-PDF-SPEC.md`, Section 9.1.
+The PDF Repair Service can automatically repair some errors. For complete information, see:
+- **[REPAIR_README.md](./REPAIR_README.md)**: API documentation and usage examples
+- **[REPAIR_LIMITATIONS.md](./REPAIR_LIMITATIONS.md)**: Safety guidelines and limitations
+- **Spec Document**: `docs/specs/EBMLib-PDF-SPEC.md`, Section 9.1
 
-**Automatically Repairable:**
-- PDF-TRAILER-003: Can append `%%EOF`
-- PDF-TRAILER-001: Can recompute startxref offset
+### Repair Classification
 
-**Conditionally Repairable (with caution):**
-- PDF-XREF-001: Can attempt linear scan rebuild
-- PDF-STRUCTURE-012: Depends on specific issue
+| Error Code | Repair Type | Safety Level | Automated | Notes |
+|------------|-------------|--------------|-----------|-------|
+| **PDF-TRAILER-003** | Append `%%EOF` marker | Very High | ✅ Yes | Safe - only adds missing marker |
+| **PDF-TRAILER-001** | Recompute startxref offset | High | ✅ Yes | Safe - recalculates offset value |
+| **PDF-TRAILER-002** | Fix trailer typos | High | ✅ Yes | Safe - corrects common dictionary typos |
+| **PDF-HEADER-001** | Manual header fix | N/A | ❌ No | Unsafe - can corrupt structure |
+| **PDF-HEADER-002** | Manual version fix | N/A | ❌ No | Unsafe - affects feature availability |
+| **PDF-XREF-001** | Manual xref rebuild | N/A | ❌ No | Unsafe - requires structural rebuild |
+| **PDF-XREF-002** | Manual xref rebuild | N/A | ❌ No | Unsafe - requires complete rebuild |
+| **PDF-XREF-003** | Manual xref rebuild | N/A | ❌ No | Unsafe - requires offset recalculation |
+| **PDF-CATALOG-001** | Manual catalog fix | N/A | ❌ No | Unsafe - affects document root |
+| **PDF-CATALOG-002** | Manual catalog fix | N/A | ❌ No | Unsafe - requires structural changes |
+| **PDF-CATALOG-003** | Manual catalog fix | N/A | ❌ No | Unsafe - requires page tree rebuild |
+| **PDF-STRUCTURE-012** | Varies | Varies | ❌ No | Depends on specific issue |
 
-**Not Automatically Repairable:**
-- PDF-HEADER-001, PDF-HEADER-002: Require manual intervention
-- PDF-CATALOG-001, PDF-CATALOG-002, PDF-CATALOG-003: Require structural rebuild
-- PDF-XREF-002, PDF-XREF-003: Require xref regeneration
+### Using the Repair Service
+
+```go
+import "github.com/example/project/internal/adapters/pdf"
+
+repairService := pdf.NewRepairService()
+validator := pdf.NewStructureValidator()
+ctx := context.Background()
+
+// Validate
+result, _ := validator.ValidateFile("document.pdf")
+report := convertToReport("document.pdf", result)
+
+// Preview repairs
+preview, _ := repairService.Preview(ctx, report)
+
+// Check if auto-repair is possible
+if preview.CanAutoRepair {
+    // Apply automated repairs
+    result, _ := repairService.Apply(ctx, "document.pdf", preview)
+    if result.Success {
+        fmt.Printf("Repaired: %s\n", result.BackupPath)
+    }
+} else {
+    // Manual intervention required
+    for _, warning := range preview.Warnings {
+        fmt.Println(warning)
+    }
+}
+```
