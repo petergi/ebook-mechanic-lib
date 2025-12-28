@@ -73,3 +73,6 @@ tmp/
 
 # golangci-lint cache
 .golangci-lint-cache/
+
+# Test fixtures (exclude generated EPUB files from version control)
+testdata/epub/*.epub
