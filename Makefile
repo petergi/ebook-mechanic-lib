@@ -1,7 +1,7 @@
 # Makefile for Go project
 
 # Variables
-BINARY_NAME=app
+BINARY_NAME=ebm-cli
 GO=go
 GOFLAGS=-v
 GOTEST=$(GO) test
