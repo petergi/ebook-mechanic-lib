@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func createMinimalValidPDF() []byte {
@@ -228,6 +229,124 @@ startxref
 	return []byte(pdf)
 }
 
+func createPDFTruncatedStream() []byte {
+	pdf := `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 100
+>>
+stream
+BT
+/F1 12 Tf
+`
+	return []byte(pdf)
+}
+
+func createPDFMalformedObjects() []byte {
+	pdf := `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R
+/Count 1
+>>
+endobj
+xref
+0 3
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+trailer
+<<
+/Size 3
+/Root 1 0 R
+>>
+startxref
+150
+%%EOF
+`
+	return []byte(pdf)
+}
+
+func createPDFWithEncryption() []byte {
+	pdf := `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+>>
+endobj
+4 0 obj
+<<
+/Filter /Standard
+/V 1
+/R 2
+/O <encrypted>
+/U <encrypted>
+/P -64
+>>
+endobj
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000200 00000 n 
+trailer
+<<
+/Size 5
+/Root 1 0 R
+/Encrypt 4 0 R
+>>
+startxref
+300
+%%EOF
+`
+	return []byte(pdf)
+}
+
 func createCorruptPDF() []byte {
 	validPDF := createMinimalValidPDF()
 	if len(validPDF) > 100 {
@@ -294,7 +413,7 @@ endobj
 	}
 
 	for i := 0; i < numPages; i++ {
-		stream := fmt.Sprintf("BT\n/F1 12 Tf\n100 700 Td\n(Page %d) Tj\nET\n", i+1)
+		stream := fmt.Sprintf("BT\n/F1 12 Tf\n100 700 Td\n(Page %d of %d) Tj\nET\n", i+1, numPages)
 		contentObj := fmt.Sprintf(`%d 0 obj
 <<
 /Length %d
@@ -317,24 +436,102 @@ endobj
 	return buf.Bytes()
 }
 
+func createPDFWithImages() []byte {
+	pdf := `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources <<
+/XObject <<
+/Im1 5 0 R
+>>
+>>
+>>
+endobj
+4 0 obj
+<<
+/Length 50
+>>
+stream
+q
+200 0 0 200 100 400 cm
+/Im1 Do
+Q
+endstream
+endobj
+5 0 obj
+<<
+/Type /XObject
+/Subtype /Image
+/Width 10
+/Height 10
+/ColorSpace /DeviceRGB
+/BitsPerComponent 8
+/Length 300
+>>
+stream
+` + strings.Repeat("\x00", 300) + `
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000274 00000 n 
+0000000373 00000 n 
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+600
+%%EOF
+`
+	return []byte(pdf)
+}
+
 func createNotPDFFile() []byte {
 	return []byte("This is not a PDF file at all. Just plain text.")
 }
 
 func main() {
 	fixtures := map[string][]byte{
-		"valid/minimal.pdf":        createMinimalValidPDF(),
-		"valid/large_100_pages.pdf": createLargePDF(100),
-		"valid/large_1000_pages.pdf": createLargePDF(1000),
-		"invalid/not_pdf.pdf":      createNotPDFFile(),
-		"invalid/no_header.pdf":    createPDFNoHeader(),
-		"invalid/invalid_version.pdf": createPDFInvalidVersion(),
-		"invalid/no_eof.pdf":       createPDFNoEOF(),
-		"invalid/no_startxref.pdf": createPDFNoStartxref(),
-		"invalid/corrupt_xref.pdf": createPDFCorruptXref(),
-		"invalid/no_catalog.pdf":   createPDFNoCatalog(),
-		"invalid/invalid_catalog.pdf": createPDFInvalidCatalog(),
-		"invalid/corrupt.pdf":      createCorruptPDF(),
+		"valid/minimal.pdf":              createMinimalValidPDF(),
+		"valid/with_images.pdf":          createPDFWithImages(),
+		"valid/large_100_pages.pdf":      createLargePDF(100),
+		"valid/large_1000_pages.pdf":     createLargePDF(1000),
+		"edge_cases/large_10mb_plus.pdf": createLargePDF(5000),
+		"edge_cases/encrypted.pdf":       createPDFWithEncryption(),
+		"invalid/not_pdf.pdf":            createNotPDFFile(),
+		"invalid/no_header.pdf":          createPDFNoHeader(),
+		"invalid/invalid_version.pdf":    createPDFInvalidVersion(),
+		"invalid/no_eof.pdf":             createPDFNoEOF(),
+		"invalid/no_startxref.pdf":       createPDFNoStartxref(),
+		"invalid/corrupt_xref.pdf":       createPDFCorruptXref(),
+		"invalid/no_catalog.pdf":         createPDFNoCatalog(),
+		"invalid/invalid_catalog.pdf":    createPDFInvalidCatalog(),
+		"invalid/corrupt.pdf":            createCorruptPDF(),
+		"invalid/truncated_stream.pdf":   createPDFTruncatedStream(),
+		"invalid/malformed_objects.pdf":  createPDFMalformedObjects(),
 	}
 
 	baseDir := "."

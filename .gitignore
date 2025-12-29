@@ -74,13 +74,19 @@ tmp/
 # golangci-lint cache
 .golangci-lint-cache/
 
+# Go module cache (local)
+.gomod/
+
 # Test fixtures (generated, not versioned)
 testdata/epub/valid/*.epub
 testdata/epub/invalid/*.epub
+testdata/epub/edge_cases/*.epub
 testdata/pdf/valid/*.pdf
 testdata/pdf/invalid/*.pdf
+testdata/pdf/edge_cases/*.pdf
 testdata/corrupt/*.epub
 testdata/corrupt/*.pdf
+generate_fixtures
 
 # Integration test artifacts
 tests/integration/coverage.out
