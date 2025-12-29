@@ -74,8 +74,19 @@ tmp/
 # golangci-lint cache
 .golangci-lint-cache/
 
-# Test fixtures (exclude generated EPUB files from version control)
-testdata/epub/*.epub
+# Test fixtures (generated, not versioned)
+testdata/epub/valid/*.epub
+testdata/epub/invalid/*.epub
+testdata/pdf/valid/*.pdf
+testdata/pdf/invalid/*.pdf
+testdata/corrupt/*.epub
+testdata/corrupt/*.pdf
+
+# Integration test artifacts
+tests/integration/coverage.out
+tests/integration/coverage.html
+tests/integration/*.prof
+tests/integration/*.test
 
 # Example output files
 examples/*.json

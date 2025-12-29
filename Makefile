@@ -60,9 +60,9 @@ build: ## Build the application binary
 	@echo "$(BOLD)$(GREEN)✓ Build complete: $(BUILD_DIR)/$(BINARY_NAME)$(RESET)"
 
 .PHONY: test
-test: ## Run all tests
+test: generate-fixtures ## Run all tests
 	@echo "$(BOLD)$(BLUE)Running all tests...$(RESET)"
-	$(GOTEST) $(GOFLAGS) -race -timeout 30s ./...
+	$(GOTEST) $(GOFLAGS) -race -timeout 5m ./...
 	@echo "$(BOLD)$(BLUE)✓ All tests passed$(RESET)"
 
 .PHONY: test-unit
@@ -72,13 +72,43 @@ test-unit: ## Run unit tests only
 	@echo "$(BOLD)$(BLUE)✓ Unit tests passed$(RESET)"
 
 .PHONY: test-integration
-test-integration: ## Run integration tests only
+test-integration: generate-fixtures ## Run integration tests only
 	@echo "$(BOLD)$(BLUE)Running integration tests...$(RESET)"
-	$(GOTEST) $(GOFLAGS) -run Integration -race -timeout 5m ./...
+	$(GOTEST) $(GOFLAGS) -run Integration -race -timeout 5m ./tests/integration/...
 	@echo "$(BOLD)$(BLUE)✓ Integration tests passed$(RESET)"
 
+.PHONY: test-bench
+test-bench: generate-fixtures ## Run benchmark tests
+	@echo "$(BOLD)$(BLUE)Running benchmark tests...$(RESET)"
+	$(GOTEST) $(GOFLAGS) -bench=. -benchmem -run=^$$ ./tests/integration/...
+	@echo "$(BOLD)$(BLUE)✓ Benchmarks complete$(RESET)"
+
+.PHONY: generate-fixtures
+generate-fixtures: ## Generate test fixtures
+	@echo "$(BOLD)$(CYAN)Generating test fixtures...$(RESET)"
+	@if [ ! -f "testdata/epub/valid/minimal.epub" ]; then \
+		echo "  Generating EPUB fixtures..."; \
+		cd testdata/epub && $(GO) run generate_fixtures.go .; \
+	else \
+		echo "  EPUB fixtures already exist"; \
+	fi
+	@if [ ! -f "testdata/pdf/valid/minimal.pdf" ]; then \
+		echo "  Generating PDF fixtures..."; \
+		cd testdata/pdf && $(GO) run generate_fixtures.go .; \
+	else \
+		echo "  PDF fixtures already exist"; \
+	fi
+	@echo "$(BOLD)$(CYAN)✓ Test fixtures ready$(RESET)"
+
+.PHONY: clean-fixtures
+clean-fixtures: ## Clean generated test fixtures
+	@echo "$(BOLD)$(RED)Cleaning test fixtures...$(RESET)"
+	@rm -rf testdata/epub/valid/*.epub testdata/epub/invalid/*.epub
+	@rm -rf testdata/pdf/valid/*.pdf testdata/pdf/invalid/*.pdf
+	@echo "$(BOLD)$(RED)✓ Test fixtures cleaned$(RESET)"
+
 .PHONY: coverage
-coverage: ## Generate test coverage report
+coverage: generate-fixtures ## Generate test coverage report
 	@echo "$(BOLD)$(BLUE)Generating coverage report...$(RESET)"
 	$(GOTEST) -coverprofile=$(COVERAGE_FILE) -covermode=atomic ./...
 	$(GO) tool cover -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
