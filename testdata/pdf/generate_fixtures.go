@@ -360,6 +360,8 @@ func createLargePDF(numPages int) []byte {
 
 	buf.WriteString("%PDF-1.4\n")
 
+	offsets := make(map[int]int)
+
 	objectNum := 1
 	catalogObj := objectNum
 	objectNum++
@@ -367,6 +369,7 @@ func createLargePDF(numPages int) []byte {
 	pagesObj := objectNum
 	objectNum++
 
+	offsets[catalogObj] = buf.Len()
 	buf.WriteString(fmt.Sprintf("%d 0 obj\n<<\n/Type /Catalog\n/Pages %d 0 R\n>>\nendobj\n", catalogObj, pagesObj))
 
 	pageObjects := make([]int, numPages)
@@ -375,6 +378,7 @@ func createLargePDF(numPages int) []byte {
 		objectNum++
 	}
 
+	offsets[pagesObj] = buf.Len()
 	buf.WriteString(fmt.Sprintf("%d 0 obj\n<<\n/Type /Pages\n/Kids [", pagesObj))
 	for i, pageObj := range pageObjects {
 		if i > 0 {
@@ -391,6 +395,7 @@ func createLargePDF(numPages int) []byte {
 	}
 
 	for i := 0; i < numPages; i++ {
+		offsets[pageObjects[i]] = buf.Len()
 		pageContent := fmt.Sprintf(`%d 0 obj
 <<
 /Type /Page
@@ -414,6 +419,7 @@ endobj
 
 	for i := 0; i < numPages; i++ {
 		stream := fmt.Sprintf("BT\n/F1 12 Tf\n100 700 Td\n(Page %d of %d) Tj\nET\n", i+1, numPages)
+		offsets[contentObjects[i]] = buf.Len()
 		contentObj := fmt.Sprintf(`%d 0 obj
 <<
 /Length %d
@@ -429,6 +435,10 @@ endobj
 	xrefStart := buf.Len()
 	buf.WriteString(fmt.Sprintf("xref\n0 %d\n", objectNum))
 	buf.WriteString("0000000000 65535 f \n")
+	for i := 1; i < objectNum; i++ {
+		offset := offsets[i]
+		buf.WriteString(fmt.Sprintf("%010d 00000 n \n", offset))
+	}
 
 	buf.WriteString(fmt.Sprintf("trailer\n<<\n/Size %d\n/Root %d 0 R\n>>\n", objectNum, catalogObj))
 	buf.WriteString(fmt.Sprintf("startxref\n%d\n%%%%EOF\n", xrefStart))
