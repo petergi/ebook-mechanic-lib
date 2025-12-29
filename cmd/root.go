@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -35,7 +36,7 @@ func newRootCmd() *cobra.Command {
 		Use:   appName,
 		Short: "Validate and repair EPUB and PDF files",
 		Long:  "EBMLib CLI validates and repairs EPUB and PDF files with configurable output formats.",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return cli.ValidateFormat(flags.format)
 		},
 	}
@@ -97,7 +98,8 @@ func withSignalContext(parent context.Context) (context.Context, context.CancelF
 func Execute() {
 	cmd := newRootCmd()
 	if err := cmd.Execute(); err != nil {
-		if exitErr, ok := err.(cli.ExitError); ok {
+		var exitErr cli.ExitError
+		if errors.As(err, &exitErr) {
 			if exitErr.Err != nil {
 				fmt.Fprintln(os.Stderr, exitErr.Err)
 			}

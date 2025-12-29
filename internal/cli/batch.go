@@ -19,6 +19,7 @@ type progressStyle struct {
 	mode     string
 }
 
+// RunBatchValidate validates a collection of files.
 func RunBatchValidate(ctx context.Context, targets []string, opts BatchOptions, reportOpts *ports.ReportOptions, filter *reporter.Filter, out io.Writer) (BatchResult, error) {
 	items, err := collectTargets(targets, opts)
 	if err != nil {
@@ -55,7 +56,7 @@ func RunBatchValidate(ctx context.Context, targets []string, opts BatchOptions, 
 
 	if multi != nil {
 		if opts.OutputPath != "" {
-			if err := os.MkdirAll(filepath.Dir(opts.OutputPath), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(opts.OutputPath), 0750); err != nil {
 				return BatchResult{InternalError: err}, err
 			}
 			file, err := os.Create(opts.OutputPath)
@@ -76,6 +77,7 @@ func RunBatchValidate(ctx context.Context, targets []string, opts BatchOptions, 
 	return result, nil
 }
 
+// RunBatchRepair repairs a collection of files.
 func RunBatchRepair(ctx context.Context, targets []string, opts BatchOptions, reportOpts *ports.ReportOptions, filter *reporter.Filter, out io.Writer) (BatchResult, error) {
 	items, err := collectTargets(targets, opts)
 	if err != nil {
@@ -119,7 +121,7 @@ func RunBatchRepair(ctx context.Context, targets []string, opts BatchOptions, re
 
 	if multi != nil {
 		if opts.OutputPath != "" {
-			if err := os.MkdirAll(filepath.Dir(opts.OutputPath), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(opts.OutputPath), 0750); err != nil {
 				return BatchResult{InternalError: err}, err
 			}
 			file, err := os.Create(opts.OutputPath)
@@ -207,7 +209,7 @@ func buildProgress(out io.Writer, style progressStyle) batch.ProgressFunc {
 		if style.useColor {
 			line = colorize(status, line)
 		}
-		fmt.Fprintln(out, line)
+		_, _ = fmt.Fprintln(out, line)
 	}
 }
 

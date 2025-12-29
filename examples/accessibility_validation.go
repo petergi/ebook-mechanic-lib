@@ -1,3 +1,4 @@
+// Package main provides an accessibility validation example.
 package main
 
 import (

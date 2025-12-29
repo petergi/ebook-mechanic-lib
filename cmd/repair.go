@@ -59,7 +59,7 @@ func newRepairCmd(root *rootFlags) *cobra.Command {
 					return err
 				}
 				if root.output != "" {
-					if err := os.MkdirAll(filepath.Dir(root.output), 0755); err != nil {
+					if err := os.MkdirAll(filepath.Dir(root.output), 0750); err != nil {
 						return err
 					}
 				}
@@ -76,14 +76,14 @@ func newRepairCmd(root *rootFlags) *cobra.Command {
 			}
 
 			if result != nil {
-				fmt.Fprintf(cmd.OutOrStdout(), "Repaired: %v\n", result.Success)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Repaired: %v\n", result.Success)
 				if result.BackupPath != "" {
-					fmt.Fprintf(cmd.OutOrStdout(), "Backup: %s\n", result.BackupPath)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Backup: %s\n", result.BackupPath)
 				}
 				if len(result.ActionsApplied) > 0 {
-					fmt.Fprintln(cmd.OutOrStdout(), "Actions applied:")
+					_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Actions applied:")
 					for _, action := range result.ActionsApplied {
-						fmt.Fprintf(cmd.OutOrStdout(), "  - %s\n", action.Description)
+						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  - %s\n", action.Description)
 					}
 				}
 			}

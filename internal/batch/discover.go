@@ -8,14 +8,16 @@ import (
 	"strings"
 )
 
+// DiscoverOptions configures file discovery.
 type DiscoverOptions struct {
 	MaxDepth   int
 	Extensions []string
 	Ignore     []string
 }
 
+// ExpandTargets expands glob patterns into concrete paths.
 func ExpandTargets(targets []string) ([]string, error) {
-	var expanded []string
+	expanded := make([]string, 0, len(targets))
 	for _, target := range targets {
 		if hasGlob(target) {
 			matches, err := filepath.Glob(target)
@@ -30,9 +32,10 @@ func ExpandTargets(targets []string) ([]string, error) {
 	return expanded, nil
 }
 
+// DiscoverFiles finds files under targets using filters.
 func DiscoverFiles(targets []string, opts DiscoverOptions) ([]string, error) {
 	seen := make(map[string]struct{})
-	var files []string
+	files := make([]string, 0, len(targets))
 
 	normalizedExts := normalizeExts(opts.Extensions)
 	ignore := opts.Ignore

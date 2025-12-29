@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// ItemResult captures a worker result.
 type ItemResult struct {
 	Path     string
 	Value    interface{}
@@ -13,6 +14,7 @@ type ItemResult struct {
 	Duration time.Duration
 }
 
+// ProgressUpdate represents a progress event.
 type ProgressUpdate struct {
 	Path      string
 	Completed int
@@ -21,17 +23,21 @@ type ProgressUpdate struct {
 	Value     interface{}
 }
 
+// ProgressFunc receives progress events.
 type ProgressFunc func(ProgressUpdate)
 
+// Config configures the worker pool.
 type Config struct {
 	Workers   int
 	QueueSize int
 }
 
+// Result aggregates all item results.
 type Result struct {
 	Items []ItemResult
 }
 
+// Run processes items using a worker pool.
 func Run(ctx context.Context, items []string, cfg Config, worker func(context.Context, string) ItemResult, progress ProgressFunc) Result {
 	workers := cfg.Workers
 	if workers <= 0 {

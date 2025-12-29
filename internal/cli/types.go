@@ -2,6 +2,7 @@ package cli
 
 import "github.com/example/project/internal/domain"
 
+// RepairOptions configures repair behavior.
 type RepairOptions struct {
 	OutputPath string
 	InPlace    bool
@@ -9,6 +10,7 @@ type RepairOptions struct {
 	BackupDir  string
 }
 
+// BatchOptions configures batch execution.
 type BatchOptions struct {
 	Workers     int
 	QueueSize   int
@@ -21,6 +23,7 @@ type BatchOptions struct {
 	Repair      RepairOptions
 }
 
+// BatchResult summarizes batch processing outcomes.
 type BatchResult struct {
 	Reports       []*domain.ValidationReport
 	Total         int

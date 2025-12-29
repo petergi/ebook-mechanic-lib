@@ -150,6 +150,7 @@ func TestAccessibilityValidator_ValidateImageAltText(t *testing.T) {
 	}
 }
 
+//nolint:dupl
 func TestAccessibilityValidator_ValidateHeadingHierarchy(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -222,6 +223,7 @@ func TestAccessibilityValidator_ValidateHeadingHierarchy(t *testing.T) {
 	}
 }
 
+//nolint:dupl
 func TestAccessibilityValidator_ValidateARIA(t *testing.T) {
 	tests := []struct {
 		name          string

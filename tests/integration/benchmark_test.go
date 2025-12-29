@@ -201,7 +201,7 @@ func BenchmarkPDFValidation_Reader_Small(b *testing.B) {
 	validator := pdf.NewStructureValidator()
 
 	testFile := filepath.Join("..", "..", "testdata", "pdf", "valid", "minimal.pdf")
-	data, err := os.ReadFile(testFile)
+	data, err := os.ReadFile(testFile) //nolint:gosec
 	if err != nil {
 		b.Skipf("Test file not found: %s", testFile)
 	}
@@ -221,7 +221,7 @@ func BenchmarkPDFValidation_Reader_Small(b *testing.B) {
 func BenchmarkReporter_JSON_SmallErrorSet(b *testing.B) {
 	ctx := context.Background()
 	rep := reporter.NewJSONReporter()
-	report := createBenchmarkReport("test.epub", 10)
+	report := createBenchmarkReport(10)
 	options := &ports.ReportOptions{}
 
 	b.ResetTimer()
@@ -237,7 +237,7 @@ func BenchmarkReporter_JSON_SmallErrorSet(b *testing.B) {
 func BenchmarkReporter_JSON_MediumErrorSet(b *testing.B) {
 	ctx := context.Background()
 	rep := reporter.NewJSONReporter()
-	report := createBenchmarkReport("test.epub", 100)
+	report := createBenchmarkReport(100)
 	options := &ports.ReportOptions{}
 
 	b.ResetTimer()
@@ -253,7 +253,7 @@ func BenchmarkReporter_JSON_MediumErrorSet(b *testing.B) {
 func BenchmarkReporter_JSON_LargeErrorSet(b *testing.B) {
 	ctx := context.Background()
 	rep := reporter.NewJSONReporter()
-	report := createBenchmarkReport("test.epub", 1000)
+	report := createBenchmarkReport(1000)
 	options := &ports.ReportOptions{}
 
 	b.ResetTimer()
@@ -269,7 +269,7 @@ func BenchmarkReporter_JSON_LargeErrorSet(b *testing.B) {
 func BenchmarkReporter_JSON_VeryLargeErrorSet(b *testing.B) {
 	ctx := context.Background()
 	rep := reporter.NewJSONReporter()
-	report := createBenchmarkReport("test.epub", 10000)
+	report := createBenchmarkReport(10000)
 	options := &ports.ReportOptions{}
 
 	b.ResetTimer()
@@ -285,7 +285,7 @@ func BenchmarkReporter_JSON_VeryLargeErrorSet(b *testing.B) {
 func BenchmarkReporter_Markdown_SmallErrorSet(b *testing.B) {
 	ctx := context.Background()
 	rep := reporter.NewMarkdownReporter()
-	report := createBenchmarkReport("test.epub", 10)
+	report := createBenchmarkReport(10)
 	options := &ports.ReportOptions{}
 
 	b.ResetTimer()
@@ -301,7 +301,7 @@ func BenchmarkReporter_Markdown_SmallErrorSet(b *testing.B) {
 func BenchmarkReporter_Markdown_MediumErrorSet(b *testing.B) {
 	ctx := context.Background()
 	rep := reporter.NewMarkdownReporter()
-	report := createBenchmarkReport("test.epub", 100)
+	report := createBenchmarkReport(100)
 	options := &ports.ReportOptions{}
 
 	b.ResetTimer()
@@ -317,7 +317,7 @@ func BenchmarkReporter_Markdown_MediumErrorSet(b *testing.B) {
 func BenchmarkReporter_Markdown_LargeErrorSet(b *testing.B) {
 	ctx := context.Background()
 	rep := reporter.NewMarkdownReporter()
-	report := createBenchmarkReport("test.epub", 1000)
+	report := createBenchmarkReport(1000)
 	options := &ports.ReportOptions{}
 
 	b.ResetTimer()
@@ -333,7 +333,7 @@ func BenchmarkReporter_Markdown_LargeErrorSet(b *testing.B) {
 func BenchmarkReporter_Text_SmallErrorSet(b *testing.B) {
 	ctx := context.Background()
 	rep := reporter.NewTextReporter()
-	report := createBenchmarkReport("test.epub", 10)
+	report := createBenchmarkReport(10)
 	options := &ports.ReportOptions{ColorEnabled: false}
 
 	b.ResetTimer()
@@ -349,7 +349,7 @@ func BenchmarkReporter_Text_SmallErrorSet(b *testing.B) {
 func BenchmarkReporter_Text_MediumErrorSet(b *testing.B) {
 	ctx := context.Background()
 	rep := reporter.NewTextReporter()
-	report := createBenchmarkReport("test.epub", 100)
+	report := createBenchmarkReport(100)
 	options := &ports.ReportOptions{ColorEnabled: false}
 
 	b.ResetTimer()
@@ -365,7 +365,7 @@ func BenchmarkReporter_Text_MediumErrorSet(b *testing.B) {
 func BenchmarkReporter_Text_LargeErrorSet(b *testing.B) {
 	ctx := context.Background()
 	rep := reporter.NewTextReporter()
-	report := createBenchmarkReport("test.epub", 1000)
+	report := createBenchmarkReport(1000)
 	options := &ports.ReportOptions{ColorEnabled: false}
 
 	b.ResetTimer()
@@ -383,7 +383,7 @@ func BenchmarkReporter_FormatMultiple_10Reports(b *testing.B) {
 	rep := reporter.NewJSONReporter().(*reporter.JSONReporter)
 	reports := make([]*domain.ValidationReport, 10)
 	for i := range reports {
-		reports[i] = createBenchmarkReport("test.epub", 50)
+		reports[i] = createBenchmarkReport(50)
 	}
 	options := &ports.ReportOptions{}
 
@@ -402,7 +402,7 @@ func BenchmarkReporter_FormatMultiple_100Reports(b *testing.B) {
 	rep := reporter.NewJSONReporter().(*reporter.JSONReporter)
 	reports := make([]*domain.ValidationReport, 100)
 	for i := range reports {
-		reports[i] = createBenchmarkReport("test.epub", 10)
+		reports[i] = createBenchmarkReport(10)
 	}
 	options := &ports.ReportOptions{}
 
@@ -421,7 +421,7 @@ func BenchmarkReporter_FormatMultiple_100Reports(b *testing.B) {
 func BenchmarkRepairService_EPUB_Preview_SmallReport(b *testing.B) {
 	service := epub.NewRepairService()
 	ctx := context.Background()
-	report := createRepairableReport("test.epub", 5)
+	report := createRepairableReport(5)
 
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -436,7 +436,7 @@ func BenchmarkRepairService_EPUB_Preview_SmallReport(b *testing.B) {
 func BenchmarkRepairService_EPUB_Preview_MediumReport(b *testing.B) {
 	service := epub.NewRepairService()
 	ctx := context.Background()
-	report := createRepairableReport("test.epub", 50)
+	report := createRepairableReport(50)
 
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -451,7 +451,7 @@ func BenchmarkRepairService_EPUB_Preview_MediumReport(b *testing.B) {
 func BenchmarkRepairService_EPUB_Preview_LargeReport(b *testing.B) {
 	service := epub.NewRepairService()
 	ctx := context.Background()
-	report := createRepairableReport("test.epub", 200)
+	report := createRepairableReport(200)
 
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -472,7 +472,7 @@ func BenchmarkRepairService_EPUB_Apply_Small(b *testing.B) {
 		b.Skipf("Test file not found: %s", testFile)
 	}
 
-	report := createRepairableReport("test.epub", 3)
+	report := createRepairableReport(3)
 	preview, err := service.Preview(ctx, report)
 	if err != nil {
 		b.Fatalf("Preview failed: %v", err)
@@ -512,7 +512,7 @@ func BenchmarkRepairService_EPUB_CanRepair(b *testing.B) {
 func BenchmarkRepairService_PDF_Preview_SmallReport(b *testing.B) {
 	service := pdf.NewRepairService()
 	ctx := context.Background()
-	report := createPDFRepairableReport("test.pdf", 5)
+	report := createPDFRepairableReport(5)
 
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -527,7 +527,7 @@ func BenchmarkRepairService_PDF_Preview_SmallReport(b *testing.B) {
 func BenchmarkRepairService_PDF_Preview_MediumReport(b *testing.B) {
 	service := pdf.NewRepairService()
 	ctx := context.Background()
-	report := createPDFRepairableReport("test.pdf", 20)
+	report := createPDFRepairableReport(20)
 
 	b.ResetTimer()
 	b.ReportAllocs()
@@ -591,9 +591,9 @@ func BenchmarkRepairService_CreateBackup_Medium(b *testing.B) {
 
 // Helper functions
 
-func createBenchmarkReport(filePath string, errorCount int) *domain.ValidationReport {
+func createBenchmarkReport(errorCount int) *domain.ValidationReport {
 	report := &domain.ValidationReport{
-		FilePath:       filePath,
+		FilePath:       "test.epub",
 		FileType:       "EPUB",
 		IsValid:        errorCount == 0,
 		Errors:         make([]domain.ValidationError, errorCount),
@@ -645,9 +645,9 @@ func createBenchmarkReport(filePath string, errorCount int) *domain.ValidationRe
 	return report
 }
 
-func createRepairableReport(filePath string, errorCount int) *domain.ValidationReport {
+func createRepairableReport(errorCount int) *domain.ValidationReport {
 	report := &domain.ValidationReport{
-		FilePath:       filePath,
+		FilePath:       "test.epub",
 		FileType:       "EPUB",
 		IsValid:        false,
 		Errors:         make([]domain.ValidationError, errorCount),
@@ -686,9 +686,9 @@ func createRepairableReport(filePath string, errorCount int) *domain.ValidationR
 	return report
 }
 
-func createPDFRepairableReport(filePath string, errorCount int) *domain.ValidationReport {
+func createPDFRepairableReport(errorCount int) *domain.ValidationReport {
 	report := &domain.ValidationReport{
-		FilePath:       filePath,
+		FilePath:       "test.epub",
 		FileType:       "PDF",
 		IsValid:        false,
 		Errors:         make([]domain.ValidationError, errorCount),

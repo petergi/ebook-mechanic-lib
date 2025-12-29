@@ -42,7 +42,7 @@ func newValidateCmd(root *rootFlags) *cobra.Command {
 				return err
 			}
 			if root.output != "" {
-				if err := os.MkdirAll(filepath.Dir(root.output), 0755); err != nil {
+				if err := os.MkdirAll(filepath.Dir(root.output), 0750); err != nil {
 					return err
 				}
 			}

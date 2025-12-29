@@ -727,9 +727,8 @@ func (v *AccessibilityValidator) validateLandmarks(doc *html.Node, result *Acces
 			}
 			role := v.getAttribute(n, "role")
 			if role != "" {
-				if role == "main" && n.Data == "main" {
+				if _, exists := landmarks[role]; exists && (role != "main" || n.Data != "main") {
 					// Avoid double-counting <main role="main">.
-				} else if _, exists := landmarks[role]; exists {
 					landmarks[role]++
 				}
 			}

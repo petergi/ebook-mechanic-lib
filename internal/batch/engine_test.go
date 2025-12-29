@@ -19,11 +19,11 @@ func TestRunWorkerLimit(t *testing.T) {
 	worker := func(_ context.Context, _ string) ItemResult {
 		current := atomic.AddInt64(&inFlight, 1)
 		for {
-			max := atomic.LoadInt64(&maxInFlight)
-			if current <= max {
+			observed := atomic.LoadInt64(&maxInFlight)
+			if current <= observed {
 				break
 			}
-			if atomic.CompareAndSwapInt64(&maxInFlight, max, current) {
+			if atomic.CompareAndSwapInt64(&maxInFlight, observed, current) {
 				break
 			}
 		}

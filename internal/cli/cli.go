@@ -15,6 +15,7 @@ import (
 	"github.com/example/project/pkg/ebmlib"
 )
 
+// ExitCode values represent CLI process results.
 const (
 	ExitCodeOK       = 0
 	ExitCodeWarning  = 1
@@ -22,6 +23,7 @@ const (
 	ExitCodeInternal = 3
 )
 
+// ExitError wraps a process exit code.
 type ExitError struct {
 	Code int
 	Err  error
@@ -34,6 +36,7 @@ func (e ExitError) Error() string {
 	return e.Err.Error()
 }
 
+// ParseFormat parses the output format flag.
 func ParseFormat(raw string) (ports.OutputFormat, error) {
 	switch strings.ToLower(raw) {
 	case "json":
@@ -47,11 +50,13 @@ func ParseFormat(raw string) (ports.OutputFormat, error) {
 	}
 }
 
+// ValidateFormat validates the output format flag.
 func ValidateFormat(raw string) error {
 	_, err := ParseFormat(raw)
 	return err
 }
 
+// BuildReporter constructs a reporter with optional filtering.
 func BuildReporter(format ports.OutputFormat, filter *reporter.Filter) ports.Reporter {
 	switch format {
 	case ports.FormatJSON:
@@ -59,11 +64,21 @@ func BuildReporter(format ports.OutputFormat, filter *reporter.Filter) ports.Rep
 			return reporter.NewJSONReporterWithFilter(filter)
 		}
 		return reporter.NewJSONReporter()
+	case ports.FormatText:
+		if filter != nil {
+			return reporter.NewTextReporterWithFilter(filter)
+		}
+		return reporter.NewTextReporter()
 	case ports.FormatMarkdown:
 		if filter != nil {
 			return reporter.NewMarkdownReporterWithFilter(filter)
 		}
 		return reporter.NewMarkdownReporter()
+	case ports.FormatHTML, ports.FormatXML:
+		if filter != nil {
+			return reporter.NewTextReporterWithFilter(filter)
+		}
+		return reporter.NewTextReporter()
 	default:
 		if filter != nil {
 			return reporter.NewTextReporterWithFilter(filter)
@@ -72,14 +87,15 @@ func BuildReporter(format ports.OutputFormat, filter *reporter.Filter) ports.Rep
 	}
 }
 
-func BuildSeverityFilter(min string, severities []string) (*reporter.Filter, error) {
-	if min == "" && len(severities) == 0 {
+// BuildSeverityFilter builds a severity filter from CLI flags.
+func BuildSeverityFilter(minSeverity string, severities []string) (*reporter.Filter, error) {
+	if minSeverity == "" && len(severities) == 0 {
 		return nil, nil
 	}
 
 	filter := reporter.NewFilter()
-	if min != "" {
-		sev, err := parseSeverity(min)
+	if minSeverity != "" {
+		sev, err := parseSeverity(minSeverity)
 		if err != nil {
 			return nil, err
 		}
@@ -112,6 +128,7 @@ func parseSeverity(raw string) (domain.Severity, error) {
 	}
 }
 
+// ExitWithReport maps a validation report to a process exit code.
 func ExitWithReport(report *domain.ValidationReport) error {
 	if report == nil {
 		return ExitError{Code: ExitCodeInternal, Err: errors.New("no report generated")}
@@ -126,6 +143,7 @@ func ExitWithReport(report *domain.ValidationReport) error {
 	return ExitError{Code: ExitCodeOK}
 }
 
+// ExitWithBatchResult maps a batch result to a process exit code.
 func ExitWithBatchResult(result BatchResult) error {
 	if result.InternalError != nil {
 		return ExitError{Code: ExitCodeInternal, Err: result.InternalError}
@@ -139,6 +157,7 @@ func ExitWithBatchResult(result BatchResult) error {
 	return ExitError{Code: ExitCodeOK}
 }
 
+// ValidateFile validates a file based on its extension.
 func ValidateFile(ctx context.Context, path string) (*domain.ValidationReport, error) {
 	ext := strings.ToLower(filepath.Ext(path))
 	switch ext {
@@ -151,6 +170,7 @@ func ValidateFile(ctx context.Context, path string) (*domain.ValidationReport, e
 	}
 }
 
+// ValidateReader validates a reader given the file type.
 func ValidateReader(ctx context.Context, reader io.Reader, size int64, fileType string) (*domain.ValidationReport, error) {
 	switch strings.ToLower(fileType) {
 	case "epub":
@@ -162,6 +182,7 @@ func ValidateReader(ctx context.Context, reader io.Reader, size int64, fileType 
 	}
 }
 
+// RepairFile validates and repairs a file according to options.
 func RepairFile(ctx context.Context, path string, opts RepairOptions) (*ports.RepairResult, *domain.ValidationReport, error) {
 	fileType := strings.ToLower(filepath.Ext(path))
 	report, err := ValidateFile(ctx, path)
@@ -264,11 +285,11 @@ func backupFile(path string, backupDir string) (string, error) {
 	if backupDir != "" {
 		dir = backupDir
 	}
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil {
 		return "", err
 	}
 	backupPath := filepath.Join(dir, filepath.Base(path)+".bak")
-	input, err := os.ReadFile(path)
+	input, err := os.ReadFile(path) //nolint:gosec
 	if err != nil {
 		return "", err
 	}

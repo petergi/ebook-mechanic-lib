@@ -9,7 +9,7 @@ import (
 func TestDiscoverFilesWithDepthAndIgnore(t *testing.T) {
 	root := t.TempDir()
 	nested := filepath.Join(root, "a", "b")
-	if err := os.MkdirAll(nested, 0755); err != nil {
+	if err := os.MkdirAll(nested, 0750); err != nil {
 		t.Fatal(err)
 	}
 
