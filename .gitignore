@@ -86,3 +86,6 @@ examples/validation_report.*
 examples/summary.*
 examples/*_repaired.epub
 examples/*_repaired.pdf
+
+# pre-commit
+.pre-commit-config.yaml.backup

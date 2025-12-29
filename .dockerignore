@@ -1,0 +1,78 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.golangci.yml
+.pre-commit-config.yaml
+
+# Documentation
+*.md
+docs/
+scripts/
+
+# Build artifacts
+build/
+dist/
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test artifacts
+*.test
+*.out
+coverage.out
+coverage.html
+*.coverprofile
+
+# Dependencies
+vendor/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+*.ipr
+*.iws
+*.code-workspace
+
+# OS specific
+Thumbs.db
+ehthumbs.db
+.Spotlight-V100
+.Trashes
+.DS_Store?
+._*
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.pid
+*.seed
+tmp/
+
+# Debug files
+debug
+__debug_bin
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Test data
+testdata/
+examples/
+
+# golangci-lint cache
+.golangci-lint-cache/

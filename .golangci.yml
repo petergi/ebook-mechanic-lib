@@ -1,0 +1,75 @@
+version: 2
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gocritic
+    - gocyclo
+    - dupl
+    - misspell
+    - revive
+    - unconvert
+    - unparam
+    - nakedret
+    - prealloc
+    - gosec
+    - bodyclose
+    - noctx
+    - whitespace
+    - errorlint
+    - exhaustive
+    - makezero
+    - nilerr
+    - predeclared
+    - wastedassign
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  gocyclo:
+    min-complexity: 15
+
+  dupl:
+    threshold: 100
+
+  misspell:
+    locale: US
+
+  nakedret:
+    max-func-lines: 30
+
+  unparam:
+    check-exported: false
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - whyNoLint
+      - unnamedResult
+
+  gosec:
+    severity: medium
+    confidence: medium
+    excludes:
+      - G104
+      - G204
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+run:
+  timeout: 5m
+  tests: true
