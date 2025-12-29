@@ -27,9 +27,9 @@ func newRepairCmd(root *rootFlags) *cobra.Command {
 		Short: "Repair an EPUB or PDF file",
 		Long:  "Validate and attempt automatic repairs for a single EPUB or PDF file.",
 		Example: strings.Join([]string{
-			"  ebmlib repair book.epub",
-			"  ebmlib repair document.pdf --in-place --backup",
-			"  ebmlib repair book.epub --output fixed.epub",
+			"  ebm-cli repair book.epub",
+			"  ebm-cli repair document.pdf --in-place --backup",
+			"  ebm-cli repair book.epub --output fixed.epub",
 		}, "\n"),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

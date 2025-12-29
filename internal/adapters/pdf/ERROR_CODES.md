@@ -440,7 +440,7 @@ if !result.Valid {
 The PDF Repair Service can automatically repair some errors. For complete information, see:
 - **[REPAIR_README.md](./REPAIR_README.md)**: API documentation and usage examples
 - **[REPAIR_LIMITATIONS.md](./REPAIR_LIMITATIONS.md)**: Safety guidelines and limitations
-- **Spec Document**: `docs/specs/EBMLib-PDF-SPEC.md`, Section 9.1
+- **Spec Document**: `docs/specs/ebm-lib-PDF-SPEC.md`, Section 9.1
 
 ### Repair Classification
 

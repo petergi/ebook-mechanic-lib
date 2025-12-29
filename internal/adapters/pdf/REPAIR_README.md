@@ -32,7 +32,7 @@ See [REPAIR_LIMITATIONS.md](./REPAIR_LIMITATIONS.md) for detailed safety analysi
 
 ## Installation
 
-The PDF repair service is part of the EBMLib adapters package:
+The PDF repair service is part of the ebm-lib adapters package:
 
 ```go
 import "github.com/example/project/internal/adapters/pdf"
@@ -518,11 +518,11 @@ When adding new repair types:
 
 ## License
 
-Part of EBMLib project. See LICENSE file for details.
+Part of ebm-lib project. See LICENSE file for details.
 
 ## See Also
 
 - [ERROR_CODES.md](./ERROR_CODES.md) - Complete error code reference
 - [REPAIR_LIMITATIONS.md](./REPAIR_LIMITATIONS.md) - Safety guidelines and limitations
-- [docs/specs/EBMLib-PDF-SPEC.md](../../../docs/specs/EBMLib-PDF-SPEC.md) - PDF validation spec
+- [docs/specs/ebm-lib-PDF-SPEC.md](../../../docs/specs/ebm-lib-PDF-SPEC.md) - PDF validation spec
 - [internal/ports/repair.go](../../ports/repair.go) - Repair service interface definition

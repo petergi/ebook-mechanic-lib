@@ -1,15 +1,15 @@
-# **EBMLib Master PDF Specifications**
+# **ebm-lib Master PDF Specifications**
 
-**Project Name**: EBMLib  
+**Project Name**: ebm-lib  
 **Focus**: PDF Validation, Archival (PDF/A), and Accessibility (PDF/UA) Modules  
-**Description**: Comprehensive reference for PDF handling in EBMLib, covering basic well-formed PDF 1.7, long-term archival (PDF/A family), and universal accessibility (PDF/UA family).  
+**Description**: Comprehensive reference for PDF handling in ebm-lib, covering basic well-formed PDF 1.7, long-term archival (PDF/A family), and universal accessibility (PDF/UA family).  
 **Status**: Phased Implementation (Basic PDF 1.7 → PDF/A → PDF/UA)  
 **Last Updated**: December 28, 2025  
 **Target Language**: Go (Golang) – Hexagonal Architecture  
 
 ## 1. Overall Product Vision for PDF Functionality
 
-EBMLib's PDF module provides reliable, standards-compliant validation and limited safe repair capabilities across three progressive layers:
+ebm-lib's PDF module provides reliable, standards-compliant validation and limited safe repair capabilities across three progressive layers:
 
 - **Layer 1 (Phase 1)**: Basic well-formed PDF 1.7 – ensures the file is syntactically correct and opens in standard readers  
 - **Layer 2 (Phase 2)**: PDF/A archival conformance – long-term preservation & self-containment  
@@ -21,7 +21,7 @@ All layers build on the same parser foundation and share consistent error report
 - Adobe PDF 1.7 Reference: https://www.adobe.com/go/pdfreference  
 - ISO 32000-2:2020 (PDF 2.0): Basis for modern features  
 - veraPDF: Behavioral oracle for PDF/A & PDF/UA validation  
-- Local project file: `/Users/petergiannopoulos/Documents/Projects/Personal/Active/EBMLib/docs/specs/EBMLib-PDF-SPEC.md`
+- Local project file: `/Users/petergiannopoulos/Documents/Projects/Personal/Active/ebm-lib/docs/specs/ebm-lib-PDF-SPEC.md`
 
 ## 2. Target PDF Standards Summary
 

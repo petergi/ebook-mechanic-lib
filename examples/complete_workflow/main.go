@@ -1,4 +1,4 @@
-// Package main provides an example program for EBMLib.
+// Package main provides an example program for ebm-lib.
 package main
 
 import (

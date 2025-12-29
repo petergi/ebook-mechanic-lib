@@ -44,9 +44,9 @@ func newBatchCmd(root *rootFlags) *cobra.Command {
 		Use:   "validate <paths...>",
 		Short: "Validate multiple files",
 		Example: strings.Join([]string{
-			"  ebmlib batch validate ./books",
-			"  ebmlib batch validate ./library --ext .epub --jobs 8",
-			"  ebmlib batch validate ./books/*.pdf --format json",
+			"  ebm-cli batch validate ./books",
+			"  ebm-cli batch validate ./library --ext .epub --jobs 8",
+			"  ebm-cli batch validate ./books/*.pdf --format json",
 		}, "\n"),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -81,8 +81,8 @@ func newBatchCmd(root *rootFlags) *cobra.Command {
 		Use:   "repair <paths...>",
 		Short: "Repair multiple files",
 		Example: strings.Join([]string{
-			"  ebmlib batch repair ./books --in-place --backup",
-			"  ebmlib batch repair ./library --jobs 4 --backup-dir ./backups",
+			"  ebm-cli batch repair ./books --in-place --backup",
+			"  ebm-cli batch repair ./library --jobs 4 --backup-dir ./backups",
 		}, "\n"),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

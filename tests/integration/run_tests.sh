@@ -5,7 +5,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-echo "=== EBMLib Integration Test Suite ==="
+echo "=== ebm-lib Integration Test Suite ==="
 echo "Project root: $PROJECT_ROOT"
 echo
 

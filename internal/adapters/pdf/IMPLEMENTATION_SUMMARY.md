@@ -336,7 +336,7 @@ for _, file := range files {
 
 ### Spec Section 9.1 Coverage
 
-All requirements from EBMLib-PDF-SPEC.md Section 9.1 "Layer 1 – Basic Well-Formed PDF 1.7 Repairs" are implemented:
+All requirements from ebm-lib-PDF-SPEC.md Section 9.1 "Layer 1 – Basic Well-Formed PDF 1.7 Repairs" are implemented:
 
 ✅ **Append missing %%EOF marker** (Very High safety)  
 ✅ **Recompute startxref value** (High safety)  
@@ -351,4 +351,4 @@ All requirements from EBMLib-PDF-SPEC.md Section 9.1 "Layer 1 – Basic Well-For
 
 The PDF Repair Service implementation provides a solid foundation for safe, automated repairs of basic PDF structural issues. It follows best practices for safety, transparency, and integration while clearly documenting its limitations and guiding users to appropriate tools for complex repairs.
 
-The implementation matches the EPUB repair service pattern, providing consistency across the EBMLib codebase and a familiar API for library users.
+The implementation matches the EPUB repair service pattern, providing consistency across the ebm-lib codebase and a familiar API for library users.

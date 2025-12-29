@@ -1,8 +1,8 @@
-# EBMLib System Requirements Specification – EPUB Validation Module
+# ebm-lib System Requirements Specification – EPUB Validation Module
 
-**Project Name**: EBMLib  
+**Project Name**: ebm-lib  
 **Module Focus**: EPUB Validation and Repair  
-**Description**: EBMLib is a multi-platform library (usable in CLIs, web apps, mobile apps, and desktop UIs) that provides comprehensive tools for working with EPUB files. The EPUB module emphasizes **validation** and, where possible, **automatic repair** of invalid EPUBs.  
+**Description**: ebm-lib is a multi-platform library (usable in CLIs, web apps, mobile apps, and desktop UIs) that provides comprehensive tools for working with EPUB files. The EPUB module emphasizes **validation** and, where possible, **automatic repair** of invalid EPUBs.  
 **Status**: Draft / Implementation Phase  
 **Last Updated**: December 28, 2025  
 
@@ -247,7 +247,7 @@ The strategies focus on the **most common real-world EPUB validation issues** (b
 | Overly large images (>5.6M pixels – Apple rule) | — (warning)               | Warn only (downscale risky & lossy)                   | —            | —                         | No                       |
 | Legacy EPUB 2 (NCX) in EPUB 3 file              | —                         | Add EPUB 3 nav if missing, keep NCX for compatibility | High         | No                        | Yes                      |
 
-### Implementation Recommendations for EBMLib
+### Implementation Recommendations for ebm-lib
 
 - **Repair engine** → Separate port/adapter: `RepairService` interface with `Preview()` and `Apply()` methods
 - **Prioritize** → Start with container/mimetype (highest success rate, lowest risk)

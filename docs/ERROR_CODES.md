@@ -1,4 +1,4 @@
-# EBMLib Error Code Catalog
+# ebm-lib Error Code Catalog
 
 **Version:** 1.0  
 **Last Updated:** December 2025  
@@ -17,7 +17,7 @@
 
 ## Overview
 
-This document provides a comprehensive catalog of all validation error codes used in EBMLib. Each error code follows a structured format and includes:
+This document provides a comprehensive catalog of all validation error codes used in ebm-lib. Each error code follows a structured format and includes:
 
 - **Code:** Unique identifier (e.g., "EPUB-CONTAINER-001")
 - **Severity:** Critical, Error, Warning, or Info
@@ -1465,5 +1465,5 @@ func getUserMessage(err ebmlib.ValidationError) string {
 **For more information:**
 - User Guide: See `docs/USER_GUIDE.md`
 - Architecture: See `docs/ARCHITECTURE.md`
-- EPUB Specification: `docs/specs/EBMLib-EPUB-SPEC.md`
-- PDF Specification: `docs/specs/EBMLib-PDF-SPEC.md`
+- EPUB Specification: `docs/specs/ebm-lib-EPUB-SPEC.md`
+- PDF Specification: `docs/specs/ebm-lib-PDF-SPEC.md`

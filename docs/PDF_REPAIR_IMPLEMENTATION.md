@@ -2,7 +2,7 @@
 
 ## Summary
 
-This document provides a complete summary of the PDF Repair Service implementation for EBMLib, which was implemented to satisfy specification section 9.1 (Layer 1 – Basic Well-Formed PDF 1.7 Repairs).
+This document provides a complete summary of the PDF Repair Service implementation for ebm-lib, which was implemented to satisfy specification section 9.1 (Layer 1 – Basic Well-Formed PDF 1.7 Repairs).
 
 ## Implementation Complete ✅
 

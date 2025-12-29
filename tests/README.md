@@ -1,6 +1,6 @@
 # Test Infrastructure
 
-Complete testing infrastructure for EBMLib validation and repair functionality.
+Complete testing infrastructure for ebm-lib validation and repair functionality.
 
 ## Quick Start
 

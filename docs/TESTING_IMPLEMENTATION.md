@@ -2,7 +2,7 @@
 
 ## Summary
 
-A comprehensive test suite and fixture infrastructure has been fully implemented for the EBMLib project, providing extensive coverage of EPUB and PDF validation and repair functionality with a target of ≥80% code coverage.
+A comprehensive test suite and fixture infrastructure has been fully implemented for the ebm-lib project, providing extensive coverage of EPUB and PDF validation and repair functionality with a target of ≥80% code coverage.
 
 ## Deliverables
 

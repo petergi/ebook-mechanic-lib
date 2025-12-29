@@ -170,5 +170,5 @@ go test ./internal/adapters/pdf/...
 
 - ISO 32000-1:2008 (PDF 1.7)
 - Adobe PDF Reference, version 1.7
-- EBMLib PDF Specification: `docs/specs/EBMLib-PDF-SPEC.md`
+- ebm-lib PDF Specification: `docs/specs/ebm-lib-PDF-SPEC.md`
 - veraPDF validation rules

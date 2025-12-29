@@ -1,6 +1,6 @@
 # Comprehensive Test Suite Documentation
 
-This document describes the complete test suite for EBMLib validation and repair functionality.
+This document describes the complete test suite for ebm-lib validation and repair functionality.
 
 ## Overview
 

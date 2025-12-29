@@ -28,9 +28,9 @@ func newValidateCmd(root *rootFlags) *cobra.Command {
 		Short: "Validate a single EPUB or PDF file",
 		Long:  "Validate an EPUB or PDF file, or read from stdin when path is '-'.",
 		Example: strings.Join([]string{
-			"  ebmlib validate book.epub",
-			"  ebmlib validate document.pdf --format json",
-			"  cat book.epub | ebmlib validate - --type epub",
+			"  ebm-cli validate book.epub",
+			"  ebm-cli validate document.pdf --format json",
+			"  cat book.epub | ebm-cli validate - --type epub",
 		}, "\n"),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

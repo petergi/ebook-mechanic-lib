@@ -1,4 +1,4 @@
-# EBMLib Architecture
+# ebm-lib Architecture
 
 **Style:** Hexagonal Architecture (Ports & Adapters)  
 **Language:** Go 1.21+  
@@ -18,7 +18,7 @@
 
 ## Architecture Overview
 
-EBMLib implements a **hexagonal architecture** (also known as Ports & Adapters or Clean Architecture) that separates business logic from external concerns. This architectural style provides:
+ebm-lib implements a **hexagonal architecture** (also known as Ports & Adapters or Clean Architecture) that separates business logic from external concerns. This architectural style provides:
 
 - **Independence from frameworks and libraries**
 - **Testability** through dependency inversion
@@ -892,8 +892,8 @@ testdata/
 │   ├── ERROR_CODES.md
 │   ├── SPEC.md
 │   ├── specs/
-│   │   ├── EBMLib-EPUB-SPEC.md
-│   │   └── EBMLib-PDF-SPEC.md
+│   │   ├── ebm-lib-EPUB-SPEC.md
+│   │   └── ebm-lib-PDF-SPEC.md
 │   └── adr/                       # Architecture Decision Records
 │
 ├── go.mod                         # Go module definition

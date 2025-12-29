@@ -1,4 +1,4 @@
-# EBMLib Testing Guide
+# ebm-lib Testing Guide
 
 **Last Updated:** 
 
@@ -7,7 +7,7 @@
 ## Test Structure Overview
 
 ```
-EBMLib/
+ebm-lib/
 ├── internal/services/
 │   ├── *_service_test.go              # Unit tests for business logic
 │   ├── *_service_integration_test.go  # Integration tests with Testcontainers

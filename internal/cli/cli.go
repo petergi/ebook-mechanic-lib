@@ -262,7 +262,7 @@ func defaultRepairedPath(path string) string {
 func createTempPath(path string) (string, error) {
 	dir := filepath.Dir(path)
 	ext := filepath.Ext(path)
-	file, err := os.CreateTemp(dir, "ebmlib-repair-*")
+	file, err := os.CreateTemp(dir, "ebm-lib-repair-*")
 	if err != nil {
 		return "", err
 	}

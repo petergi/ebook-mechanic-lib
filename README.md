@@ -1,4 +1,4 @@
-# EBM Library
+# ebm-lib
 
 A Go library for validating and repairing EPUB and PDF ebooks, using hexagonal architecture with clean separation of concerns.
 
@@ -632,22 +632,22 @@ The CLI lives under `cmd/` and exposes validation, repair, and batch operations.
 
 ```bash
 # Validate a single file
-ebmlib validate book.epub
+ebm-cli validate book.epub
 
 # Validate with JSON output and severity filtering
-ebmlib validate document.pdf --format json --min-severity warning
+ebm-cli validate document.pdf --format json --min-severity warning
 
 # Repair in place with backup
-ebmlib repair book.epub --in-place --backup
+ebm-cli repair book.epub --in-place --backup
 
 # Batch validate a directory with 8 workers
-ebmlib batch validate ./library --jobs 8 --progress simple
+ebm-cli batch validate ./library --jobs 8 --progress simple
 
 # Batch repair with glob patterns
-ebmlib batch repair ./books/**/*.epub --in-place --backup
+ebm-cli batch repair ./books/**/*.epub --in-place --backup
 ```
 
-Run `ebmlib --help`, `ebmlib validate --help`, and `ebmlib batch --help` for detailed flag and example references.
+Run `ebm-cli --help`, `ebm-cli validate --help`, and `ebm-cli batch --help` for detailed flag and example references.
 
 ## Dependencies
 

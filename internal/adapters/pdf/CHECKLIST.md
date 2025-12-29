@@ -125,7 +125,7 @@
 - [x] Section 7.5.4: Cross-Reference Table
 - [x] Section 7.7.2: Document Catalog
 - [x] Section 7.5.3: Object Structure
-- [x] EBMLib PDF Spec Section 3 compliance
+- [x] ebm-lib PDF Spec Section 3 compliance
 
 ### Repair Service (Spec Section 9.1) ✅
 

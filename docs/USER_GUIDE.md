@@ -1,4 +1,4 @@
-# EBMLib User Guide
+# ebm-lib User Guide
 
 **Version:** 1.0  
 **Last Updated:** December 2025
@@ -18,7 +18,7 @@
 
 ## Introduction
 
-EBMLib is a comprehensive Go library for validating and repairing EPUB 3.x and PDF 1.7 ebook files. It provides:
+ebm-lib is a comprehensive Go library for validating and repairing EPUB 3.x and PDF 1.7 ebook files. It provides:
 
 - **Complete validation** of EPUB structure, metadata, content documents, and navigation
 - **PDF structural validation** including header, trailer, cross-reference tables, and catalog

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The PDF Repair Service in EBMLib provides **safe, automated repairs** for basic PDF 1.7 structural issues. This document outlines what can be safely repaired, what requires manual intervention, and why certain repairs are considered unsafe.
+The PDF Repair Service in ebm-lib provides **safe, automated repairs** for basic PDF 1.7 structural issues. This document outlines what can be safely repaired, what requires manual intervention, and why certain repairs are considered unsafe.
 
 ## Safe Repairs (Automated)
 

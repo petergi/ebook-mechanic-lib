@@ -1,4 +1,4 @@
-# EBM Library - Public API
+# ebm-lib - Public API
 
 This package provides a simple, high-level API for validating and repairing EPUB and PDF ebooks.
 

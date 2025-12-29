@@ -1,7 +1,7 @@
 
-# EBMLib – System Requirements Specification
+# ebm-lib – System Requirements Specification
 
-**Project Name**: EBMLib  
+**Project Name**: ebm-lib  
 **Description**: Core validation library for EPUB files (EPUB 3.x) and basic well-formed PDF 1.7 files  
 **Language**: Go (Golang)  
 **Architecture**: Hexagonal (Ports & Adapters / Clean Architecture)  
@@ -59,11 +59,11 @@ The library **must** detect and report issues in the following areas, with at le
 All validation logic **must** be derived exclusively from the following local documents (single source of truth):
 
 - EPUB rules:  
-  `/Users/petergiannopoulos/Documents/Projects/Personal/Active/EBMLib/docs/specs/EBMLib-EPUB-SPEC.md`
+  `/Users/petergiannopoulos/Documents/Projects/Personal/Active/ebm-lib/docs/specs/ebm-lib-EPUB-SPEC.md`
 - PDF rules:  
-  `/Users/petergiannopoulos/Documents/Projects/Personal/Active/EBMLib/docs/specs/EBMLib-PDF-SPEC.md`
+  `/Users/petergiannopoulos/Documents/Projects/Personal/Active/ebm-lib/docs/specs/ebm-lib-PDF-SPEC.md`
 - Architecture & design guidelines:  
-  `/Users/petergiannopoulos/Documents/Projects/Personal/Active/EBMLib/docs/ARCHITECTURE.md`
+  `/Users/petergiannopoulos/Documents/Projects/Personal/Active/ebm-lib/docs/ARCHITECTURE.md`
 
 ## 5. Architectural & Documentation Requirements
 
@@ -72,7 +72,7 @@ All validation logic **must** be derived exclusively from the following local do
 - **Decision documentation**:
   - All significant architectural, design, and technology decisions **must** be recorded as **Architectural Decision Records (ADRs)**
   - ADRs stored in:  
-    `/Users/petergiannopoulos/Documents/Projects/Personal/Active/EBMLib/docs/adr/`
+    `/Users/petergiannopoulos/Documents/Projects/Personal/Active/ebm-lib/docs/adr/`
   - One ADR file per meaningful decision
 
 ## 6. Version Control
@@ -150,4 +150,4 @@ Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `ci`, 
 4. Begin implementing metadata parser & basic validation
 
 ---
-*This specification serves as the primary requirements document for the EBMLib project. All implementation must align with this document and the referenced local spec files.*
+*This specification serves as the primary requirements document for the ebm-lib project. All implementation must align with this document and the referenced local spec files.*

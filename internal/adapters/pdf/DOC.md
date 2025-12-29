@@ -375,6 +375,6 @@ if preview.CanAutoRepair {
 
 - **PDF 1.7 Specification**: ISO 32000-1:2008
 - **unipdf Documentation**: https://github.com/unidoc/unipdf
-- **Project Spec**: docs/specs/EBMLib-PDF-SPEC.md
+- **Project Spec**: docs/specs/ebm-lib-PDF-SPEC.md
 - **ADR-003**: docs/adr/ADR-003-unipdf-over-pdfcpu.md
 - **Error Codes**: [ERROR_CODES.md](./ERROR_CODES.md)

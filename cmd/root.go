@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	appName = "ebmlib"
+	appName = "ebm-cli"
 )
 
 type rootFlags struct {
@@ -35,7 +35,7 @@ func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           appName,
 		Short:         "Validate and repair EPUB and PDF files",
-		Long:          "EBMLib CLI validates and repairs EPUB and PDF files with configurable output formats.",
+		Long:          "ebm-lib CLI validates and repairs EPUB and PDF files with configurable output formats.",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
