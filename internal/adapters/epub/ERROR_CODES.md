@@ -498,3 +498,122 @@ for _, link := range result.LandmarkLinks {
     fmt.Printf("Landmark: %s -> %s\n", link.Text, link.Href)
 }
 ```
+
+---
+
+## Accessibility Error Codes (WCAG 2.1 & EPUB Accessibility 1.1)
+
+### EPUB-A11Y-001: Missing Language Declaration
+
+**Severity:** Error  
+**Description:** HTML element missing lang or xml:lang attribute.  
+**WCAG 2.1:** 3.1.1 Language of Page (Level A)
+
+**Resolution:** Add lang="en" to the <html> element.
+
+---
+
+### EPUB-A11Y-002: Invalid Language Code
+
+**Severity:** Warning  
+**Description:** Language code may not be valid.  
+**WCAG 2.1:** 3.1.1 Language of Page (Level A)
+
+**Resolution:** Use valid ISO 639 codes (e.g., "en", "fr", "en-US").
+
+---
+
+### EPUB-A11Y-003: Missing Semantic Structure
+
+**Severity:** Warning  
+**Description:** Document contains no HTML5 semantic elements.  
+**WCAG 2.1:** 1.3.1 Info and Relationships (Level A)
+
+**Resolution:** Use <article>, <section>, <nav>, <header>, <footer>, <aside>, <main>.
+
+---
+
+### EPUB-A11Y-005: Missing Alt Text
+
+**Severity:** Error  
+**Description:** Image missing alt attribute.  
+**WCAG 2.1:** 1.1.1 Non-text Content (Level A)
+
+**Resolution:** Add alt attribute to all images. Use alt="" for decorative images.
+
+---
+
+### EPUB-A11Y-007: Invalid ARIA Role
+
+**Severity:** Error  
+**Description:** Invalid ARIA role value.  
+**WCAG 2.1:** 4.1.2 Name, Role, Value (Level A)
+
+**Resolution:** Use valid ARIA roles from WAI-ARIA specification.
+
+---
+
+### EPUB-A11Y-009: Missing ARIA Label
+
+**Severity:** Error  
+**Description:** Element with role requires aria-label or aria-labelledby.  
+**WCAG 2.1:** 4.1.2 Name, Role, Value (Level A)
+
+**Resolution:** Add aria-label or aria-labelledby.
+
+---
+
+### EPUB-A11Y-011: Missing Table Headers
+
+**Severity:** Error  
+**Description:** Data table missing header cells.  
+**WCAG 2.1:** 1.3.1 Info and Relationships (Level A)
+
+**Resolution:** Add <th> elements or headers attribute.
+
+---
+
+### EPUB-A11Y-013: Missing Form Labels
+
+**Severity:** Error  
+**Description:** Form control missing label.  
+**WCAG 2.1:** 3.3.2 Labels (Level A), 4.1.2 Name, Role, Value (Level A)
+
+**Resolution:** Associate with <label> or add aria-label.
+
+---
+
+### EPUB-A11Y-019: Empty Heading
+
+**Severity:** Error  
+**Description:** Heading element is empty.  
+**WCAG 2.1:** 1.3.1 Info and Relationships (Level A)
+
+**Resolution:** Provide meaningful heading text.
+
+---
+
+### EPUB-A11Y-020: Skipped Heading Level
+
+**Severity:** Error  
+**Description:** Heading hierarchy skips levels.  
+**WCAG 2.1:** 1.3.1 Info and Relationships (Level A)
+
+**Resolution:** Follow h1 → h2 → h3 hierarchy without skipping.
+
+---
+
+## Accessibility Scoring (0-100)
+
+- **Language Declaration (5%):** Valid lang/xml:lang
+- **Semantic Structure (25%):** HTML5 semantic elements
+- **ARIA Compliance (20%):** Proper ARIA roles/attributes
+- **Alt Text (25%):** Images with appropriate alt text
+- **Heading Hierarchy (15%):** Proper heading structure
+- **Reading Order (10%):** No disruptive tabindex
+
+**Compliance Levels:**
+- 90-100: WCAG 2.1 AA
+- 80-89: WCAG 2.1 A
+- 60-79: Partial
+- 0-59: Non-compliant

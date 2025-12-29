@@ -78,6 +78,7 @@ tmp/
 
 # Go module cache (local)
 .gomod/
+.gocache/
 
 # Test fixtures (generated, not versioned)
 testdata/epub/valid/*.epub
