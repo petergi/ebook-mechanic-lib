@@ -626,6 +626,29 @@ type RepairPreview struct {
 }
 ```
 
+## CLI Usage
+
+The CLI lives under `cmd/` and exposes validation, repair, and batch operations.
+
+```bash
+# Validate a single file
+ebmlib validate book.epub
+
+# Validate with JSON output and severity filtering
+ebmlib validate document.pdf --format json --min-severity warning
+
+# Repair in place with backup
+ebmlib repair book.epub --in-place --backup
+
+# Batch validate a directory with 8 workers
+ebmlib batch validate ./library --jobs 8 --progress simple
+
+# Batch repair with glob patterns
+ebmlib batch repair ./books/**/*.epub --in-place --backup
+```
+
+Run `ebmlib --help`, `ebmlib validate --help`, and `ebmlib batch --help` for detailed flag and example references.
+
 ## Dependencies
 
 - `archive/zip` - Standard library for ZIP archive handling
