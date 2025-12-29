@@ -1,6 +1,6 @@
-# Integration Test Suite
+# Integration Tests and Benchmarks
 
-This directory contains comprehensive integration tests for EPUB and PDF validation with systematic coverage of all error codes and edge cases.
+This directory contains comprehensive integration tests for EPUB and PDF validation with systematic coverage of all error codes and edge cases, plus a comprehensive performance benchmarking suite.
 
 ## Overview
 
@@ -11,27 +11,22 @@ The integration test suite provides:
 - **Edge case validation** for robustness
 - **Oracle comparison** methodology (epubcheck for EPUB)
 
-## Test Organization
+## Directory Structure
 
-### Core Integration Tests
-
-- **epub_validator_integration_test.go**: Comprehensive EPUB validation tests
-  - Table-driven error code tests (all EPUB-XXX-XXX codes)
-  - Valid file tests (minimal, complex nested, multiple rootfiles)
-  - Performance tests (100, 500, 2000+ chapters)
-  - Edge case tests (>10MB files, compression issues, corruption)
-  
-- **pdf_validator_integration_test.go**: Comprehensive PDF validation tests
-  - Table-driven error code tests (all PDF-XXX-XXX codes)
-  - Valid file tests (minimal, with images, multi-page)
-  - Performance tests (100, 1000, 5000+ pages)
-  - Corruption scenario tests (header, trailer, xref, catalog)
-  
-- **benchmark_test.go**: Performance benchmarks for large file handling
+```
+tests/integration/
+├── benchmark_test.go                  # Performance benchmark suite
+├── epub_validator_integration_test.go # EPUB validation tests
+├── pdf_validator_integration_test.go  # PDF validation tests
+├── BENCHMARKS.md                      # Baseline metrics and targets
+├── .benchmark-template.txt            # Expected benchmark format
+└── README.md                          # This file
+```
 
 ## Running Tests
 
-### All Integration Tests
+### Integration Tests
+
 ```bash
 # From project root
 make test-integration
@@ -42,6 +37,7 @@ go test -v
 ```
 
 ### Specific Test Suites
+
 ```bash
 # EPUB tests only
 go test -v -run TestEPUB
@@ -60,21 +56,98 @@ go test -v -run TableDriven
 ```
 
 ### With Coverage
+
 ```bash
 go test -v -coverprofile=coverage.out
 go tool cover -html=coverage.out
 ```
 
-### Benchmark Tests
+### Performance Benchmarks
+
 ```bash
-go test -v -bench=. -benchmem
+# Quick benchmark run (shows current performance)
+make test-bench
+
+# Run benchmarks with result capture (5 iterations)
+make bench
+
+# Create baseline for regression detection (10 iterations)
+make bench-baseline
+
+# Compare current performance with baseline
+make bench-compare
 ```
+
+## Benchmark Categories
+
+### 1. EPUB Validation Benchmarks
+
+Tests validation throughput across different file sizes:
+
+- **Small (<1MB)**: `BenchmarkEPUBValidation_Small_Minimal`
+- **Medium (1-10MB)**: `BenchmarkEPUBValidation_Medium_100Chapters`
+- **Large (>10MB)**: `BenchmarkEPUBValidation_Large_500Chapters`
+
+Also includes specialized benchmarks for:
+- Structure-only validation
+- Metadata-only validation
+- Content document validation
+
+### 2. PDF Validation Benchmarks
+
+Tests PDF structural validation performance:
+
+- **Small**: `BenchmarkPDFValidation_Small_Minimal`
+- **Medium**: `BenchmarkPDFValidation_Medium_100Pages`
+- **Large**: `BenchmarkPDFValidation_Large_500Pages`
+
+### 3. Reporter Formatting Benchmarks
+
+Tests report generation performance with varying error counts:
+
+- **Small (10 errors)**: `BenchmarkReporter_JSON_SmallErrorSet`
+- **Medium (100 errors)**: `BenchmarkReporter_JSON_MediumErrorSet`
+- **Large (1000 errors)**: `BenchmarkReporter_JSON_LargeErrorSet`
+- **Very Large (10000 errors)**: `BenchmarkReporter_JSON_VeryLargeErrorSet`
+
+Covers all reporter formats: JSON, Markdown, and Text.
+
+### 4. Repair Service Benchmarks
+
+Tests repair operation performance:
+
+- **Preview**: Analysis of repairable errors (no I/O)
+- **Apply**: Full repair with file I/O
+- **Backup**: File copy operations
+
+## Performance Targets
+
+See [BENCHMARKS.md](./BENCHMARKS.md) for detailed performance targets and baseline metrics.
+
+### Quick Reference
+
+| Operation | Target | Memory Target |
+|-----------|--------|---------------|
+| EPUB Small | < 2ms | < 500 KB |
+| EPUB Medium | < 20ms | < 5 MB |
+| PDF Small | < 1ms | < 200 KB |
+| Reporter (100 errors) | < 1ms | < 500 KB |
+| Repair Preview | < 100µs | < 100 KB |
+
+## CI Integration
+
+Benchmarks run automatically on every PR and push to main. Performance regressions are detected using:
+
+- **Time/op regression > 20%**: Fails CI
+- **Memory/op regression > 30%**: Fails CI
+- **Allocations/op regression > 40%**: Fails CI
 
 ## Test Fixtures
 
 Test fixtures are auto-generated from `testdata/{epub,pdf}/generate_fixtures.go`.
 
 ### Generate All Fixtures
+
 ```bash
 # EPUB fixtures
 cd testdata/epub && go run generate_fixtures.go
@@ -162,6 +235,80 @@ Performance tests track:
 - Validation duration vs. file size
 - Memory usage (via successful completion)
 - Scalability (linear vs. exponential time)
+
+## Profiling
+
+For deep performance analysis:
+
+```bash
+# CPU profiling
+go test -bench=BenchmarkEPUBValidation_Large -cpuprofile=cpu.prof ./tests/integration/...
+go tool pprof cpu.prof
+
+# Memory profiling
+go test -bench=BenchmarkReporter_JSON_LargeErrorSet -memprofile=mem.prof ./tests/integration/...
+go tool pprof mem.prof
+
+# Execution trace
+go test -bench=BenchmarkRepairService -trace=trace.out ./tests/integration/...
+go tool trace trace.out
+```
+
+## Writing New Benchmarks
+
+When adding new benchmarks:
+
+1. Follow naming convention: `Benchmark<Component>_<Scenario>`
+2. Use `b.ResetTimer()` before benchmark loop
+3. Use `b.ReportAllocs()` to track allocations
+4. Stop timer during setup/teardown with `b.StopTimer()` and `b.StartTimer()`
+5. Document expected performance in BENCHMARKS.md
+
+Example:
+
+```go
+func BenchmarkMyFeature_LargeInput(b *testing.B) {
+    // Setup
+    input := createLargeTestData()
+    
+    b.ResetTimer()
+    b.ReportAllocs()
+    
+    for i := 0; i < b.N; i++ {
+        result := MyFeature(input)
+        if result == nil {
+            b.Fatal("unexpected nil result")
+        }
+    }
+}
+```
+
+## Analyzing Results
+
+### Using benchstat
+
+```bash
+# Install benchstat
+go install golang.org/x/perf/cmd/benchstat@latest
+
+# Compare two benchmark runs
+go test -bench=. -benchmem -count=10 > old.txt
+# Make changes...
+go test -bench=. -benchmem -count=10 > new.txt
+benchstat old.txt new.txt
+```
+
+### Understanding Output
+
+```
+BenchmarkEPUBValidation_Small-8    500    2.5 ms/op    450 KB/op    2500 allocs/op
+                              │    │      │            │            │
+                              │    │      │            │            └─ Allocations per operation
+                              │    │      │            └─ Memory allocated per operation
+                              │    │      └─ Time per operation
+                              │    └─ Number of iterations
+                              └─ Number of CPU cores used
+```
 
 ## Key Test Functions
 
@@ -330,9 +477,47 @@ Validation took 5500 ms, expected < 5000 ms
 2. Identify bottlenecks
 3. Optimize or adjust expectations
 
-## References
+### Benchmarks Skipped
+
+If benchmarks are skipped with "Test file not found", run:
+
+```bash
+make generate-fixtures
+```
+
+### Inconsistent Results
+
+For more stable results:
+- Close other applications
+- Run with higher iteration count: `-count=10`
+- Use longer benchmark time: `-benchtime=5s`
+- Disable CPU frequency scaling
+
+### Memory Leaks
+
+If memory usage grows unexpectedly:
+
+1. Run memory profiler: `-memprofile=mem.prof`
+2. Analyze with pprof: `go tool pprof mem.prof`
+3. Look for large allocations: `top` or `list FunctionName`
+4. Check for goroutine leaks: `-trace=trace.out`
+
+## Contributing
+
+When submitting PRs that may affect performance:
+
+1. Run benchmarks before and after changes
+2. Include benchmark comparison in PR description
+3. Explain any performance improvements or necessary regressions
+4. Update BENCHMARKS.md if targets change
+
+## Resources
 
 - [EPUB 3.3 Specification](https://www.w3.org/TR/epub-33/)
 - [PDF 1.7 Specification (ISO 32000-1:2008)](https://www.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf)
 - [epubcheck](https://github.com/w3c/epubcheck) - EPUB reference validator
 - [QPDF](http://qpdf.sourceforge.net/) - PDF structure checker
+- [Go Benchmark Documentation](https://pkg.go.dev/testing#hdr-Benchmarks)
+- [Profiling Go Programs](https://go.dev/blog/pprof)
+- [benchstat Documentation](https://pkg.go.dev/golang.org/x/perf/cmd/benchstat)
+- [Performance Analysis Tools](https://github.com/golang/go/wiki/Performance)

@@ -14,6 +14,9 @@
 - `make lint` runs `golangci-lint` across the codebase.
 - `make test` runs all tests with race detection and auto-generates fixtures.
 - `make coverage` produces `coverage.out` and `coverage.html` (CI enforces >=80%).
+- `make test-bench` runs performance benchmarks.
+- `make bench-baseline` creates performance baseline (run before optimizations).
+- `make bench-compare` compares current performance with baseline (detects regressions).
 
 ## Coding Style & Naming Conventions
 - Format with `go fmt` (`make fmt`); use standard Go tabs and naming (exported `PascalCase`, unexported `camelCase`).
@@ -25,6 +28,9 @@
 - Use `go test` via `make test`, which generates fixtures in `testdata/` if missing.
 - Unit tests should be fast (`make test-unit`), integration tests live in `tests/integration/` and can be run with `make test-integration`.
 - Name tests with Go conventions: `TestXxx`, `BenchmarkXxx`, `TestXxxIntegration` for integration focus.
+- Benchmarks measure performance across validators, reporters, and repair operations with various file sizes.
+- CI enforces performance regression detection: >20% time increase or >30% memory increase fails the build.
+- Before optimization work, create a baseline with `make bench-baseline`, then compare with `make bench-compare`.
 
 ## Commit & Pull Request Guidelines
 - Use Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`, `perf:`, `ci:`). Example: `feat(epub): add container.xml validation`.

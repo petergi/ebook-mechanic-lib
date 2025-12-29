@@ -80,8 +80,27 @@ test-integration: generate-fixtures ## Run integration tests only
 .PHONY: test-bench
 test-bench: generate-fixtures ## Run benchmark tests
 	@echo "$(BOLD)$(BLUE)Running benchmark tests...$(RESET)"
-	$(GOTEST) $(GOFLAGS) -bench=. -benchmem -run=^$$ ./tests/integration/...
+	$(GOTEST) $(GOFLAGS) -bench=. -benchmem -benchtime=1s -run=^$$ ./tests/integration/...
 	@echo "$(BOLD)$(BLUE)✓ Benchmarks complete$(RESET)"
+
+.PHONY: bench
+bench: ## Run benchmarks and save results with timestamp
+	@echo "$(BOLD)$(BLUE)Running benchmarks with results capture...$(RESET)"
+	@./scripts/run-benchmarks.sh
+	@echo "$(BOLD)$(BLUE)✓ Benchmarks saved$(RESET)"
+
+.PHONY: bench-baseline
+bench-baseline: generate-fixtures ## Create baseline benchmark results
+	@echo "$(BOLD)$(BLUE)Creating baseline benchmark results...$(RESET)"
+	@./scripts/run-benchmarks.sh benchmarks-baseline.txt 10
+	@echo "$(BOLD)$(GREEN)✓ Baseline created: benchmarks-baseline.txt$(RESET)"
+
+.PHONY: bench-compare
+bench-compare: ## Compare current benchmarks with baseline
+	@echo "$(BOLD)$(BLUE)Running benchmarks and comparing with baseline...$(RESET)"
+	@./scripts/run-benchmarks.sh benchmarks-new.txt 5
+	@./scripts/benchmark-compare.sh benchmarks-baseline.txt benchmarks-new.txt
+	@echo "$(BOLD)$(GREEN)✓ Comparison complete$(RESET)"
 
 .PHONY: generate-fixtures
 generate-fixtures: ## Generate test fixtures

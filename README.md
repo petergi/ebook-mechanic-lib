@@ -288,6 +288,15 @@ make test-integration
 
 # Generate coverage report
 make coverage
+
+# Run performance benchmarks
+make test-bench
+
+# Create performance baseline
+make bench-baseline
+
+# Compare with baseline
+make bench-compare
 ```
 
 ### Code Quality
@@ -302,6 +311,41 @@ make vet
 # Run linter
 make lint
 ```
+
+## Performance Benchmarking
+
+The library includes comprehensive performance benchmarks for validation throughput, reporter formatting, and repair operations. See [docs/BENCHMARKING.md](docs/BENCHMARKING.md) for detailed information.
+
+### Quick Start
+
+```bash
+# Run all benchmarks
+make test-bench
+
+# Create baseline for regression detection
+make bench-baseline
+
+# Compare current performance with baseline
+make bench-compare
+```
+
+### Benchmark Categories
+
+- **EPUB Validation**: Small (<1MB), Medium (1-10MB), Large (>10MB) files
+- **PDF Validation**: Various file sizes and validation modes
+- **Reporter Formatting**: Different error counts (10, 100, 1K, 10K errors)
+- **Repair Service**: Preview and apply operations
+
+### Performance Targets
+
+| Operation | Target Time | Memory Target |
+|-----------|-------------|---------------|
+| EPUB Small | < 2ms | < 500 KB |
+| EPUB Medium | < 20ms | < 5 MB |
+| PDF Small | < 1ms | < 200 KB |
+| Reporter (100 errors) | < 1ms | < 500 KB |
+
+See [tests/integration/BENCHMARKS.md](tests/integration/BENCHMARKS.md) for complete baseline metrics.
 
 ## Make Targets
 

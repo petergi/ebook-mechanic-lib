@@ -518,6 +518,7 @@ func main() {
 		"valid/minimal.pdf":              createMinimalValidPDF(),
 		"valid/with_images.pdf":          createPDFWithImages(),
 		"valid/large_100_pages.pdf":      createLargePDF(100),
+		"valid/large_500_pages.pdf":      createLargePDF(500),
 		"valid/large_1000_pages.pdf":     createLargePDF(1000),
 		"edge_cases/large_10mb_plus.pdf": createLargePDF(5000),
 		"edge_cases/encrypted.pdf":       createPDFWithEncryption(),

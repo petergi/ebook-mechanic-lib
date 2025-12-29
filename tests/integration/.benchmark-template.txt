@@ -1,0 +1,18 @@
+# Benchmark Results Template
+# 
+# This file serves as a template showing expected benchmark output format.
+# Actual baseline will be created by running: make bench-baseline
+#
+# Expected format:
+# BenchmarkName-GOMAXPROCS    iterations    ns/op    B/op    allocs/op
+#
+# Example:
+# BenchmarkEPUBValidation_Small_Minimal-8    500    2500000 ns/op    450000 B/op    2500 allocs/op
+#
+# To create your baseline:
+#   1. Ensure test fixtures exist: make generate-fixtures
+#   2. Run: make bench-baseline
+#   3. Baseline saved to: benchmarks-baseline.txt
+#
+# To compare with baseline:
+#   make bench-compare

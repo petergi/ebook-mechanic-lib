@@ -1,0 +1,159 @@
+name: Benchmark Comparison Comment
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  comment:
+    name: Post Benchmark Comment
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Download benchmark artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: ${{ github.event.workflow_run.id }},
+            });
+            const matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "benchmark-results"
+            })[0];
+            if (matchArtifact) {
+              const download = await github.rest.actions.downloadArtifact({
+                 owner: context.repo.owner,
+                 repo: context.repo.repo,
+                 artifact_id: matchArtifact.id,
+                 archive_format: 'zip',
+              });
+              const fs = require('fs');
+              fs.writeFileSync('${{github.workspace}}/benchmark-results.zip', Buffer.from(download.data));
+            }
+
+      - name: Extract benchmark results
+        run: |
+          if [ -f benchmark-results.zip ]; then
+            unzip benchmark-results.zip
+          fi
+
+      - name: Get PR number
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: '${{ github.event.workflow_run.head_repository.owner.login }}:${{ github.event.workflow_run.head_branch }}'
+            });
+            if (pullRequests.length > 0) {
+              return pullRequests[0].number;
+            }
+
+      - name: Comment benchmark results
+        if: steps.pr.outputs.result != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const prNumber = ${{ steps.pr.outputs.result }};
+            
+            if (!fs.existsSync('benchmarks-new.txt')) {
+              console.log('No benchmark results found');
+              return;
+            }
+            
+            const newResults = fs.readFileSync('benchmarks-new.txt', 'utf8');
+            let baselineResults = '';
+            if (fs.existsSync('benchmarks-baseline.txt')) {
+              baselineResults = fs.readFileSync('benchmarks-baseline.txt', 'utf8');
+            }
+            
+            // Extract key benchmarks for summary
+            const extractBenchmarks = (text) => {
+              const lines = text.split('\n').filter(line => line.startsWith('Benchmark'));
+              return lines.slice(0, 10).map(line => {
+                const match = line.match(/^(\S+)\s+(\d+)\s+([\d.]+\s+\S+)\s+([\d.]+\s+\S+)\s+([\d.]+\s+\S+)/);
+                if (match) {
+                  return `| ${match[1].padEnd(40)} | ${match[3]} | ${match[4]} | ${match[5]} |`;
+                }
+                return null;
+              }).filter(Boolean).join('\n');
+            };
+            
+            const summaryTable = extractBenchmarks(newResults);
+            
+            const body = `## 📊 Performance Benchmark Results
+            
+            Benchmark results from this PR. Full results are available as artifacts.
+            
+            ### Sample Results (top 10)
+            
+            | Benchmark | Time/op | Memory/op | Allocs/op |
+            |-----------|---------|-----------|-----------|
+            ${summaryTable || '_No benchmark data available_'}
+            
+            <details>
+            <summary>View all benchmark results</summary>
+            
+            \`\`\`
+            ${newResults.split('\n').slice(0, 50).join('\n')}
+            ${newResults.split('\n').length > 50 ? '...\n(truncated, see artifacts for full results)' : ''}
+            \`\`\`
+            
+            </details>
+            
+            ${baselineResults ? `
+            <details>
+            <summary>Baseline comparison available</summary>
+            
+            Run \`make bench-compare\` locally to see detailed comparison with baseline.
+            
+            </details>
+            ` : ''}
+            
+            ---
+            📈 [Full benchmark documentation](../blob/main/docs/BENCHMARKING.md) | 📊 [Baseline metrics](../blob/main/tests/integration/BENCHMARKS.md)
+            `;
+            
+            // Check for existing comments
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('📊 Performance Benchmark Results')
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body
+              });
+            }
