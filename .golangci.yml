@@ -61,9 +61,11 @@ linters-settings:
   gosec:
     severity: medium
     confidence: medium
-    excludes:
+    exclude:
       - G104
       - G204
+      - G304
+      - G306
 
 issues:
   exclude-use-default: false

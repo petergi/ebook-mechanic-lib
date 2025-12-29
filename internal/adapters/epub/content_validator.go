@@ -1,6 +1,7 @@
 package epub
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"golang.org/x/net/html"
 )
 
+// Content validation error codes.
 const (
 	ErrorCodeContentNotWellFormed    = "EPUB-CONTENT-001"
 	ErrorCodeContentMissingDoctype   = "EPUB-CONTENT-002"
@@ -20,11 +22,13 @@ const (
 	ErrorCodeContentInvalidEncoding  = "EPUB-CONTENT-008"
 )
 
+// Content validation constants.
 const (
 	XHTMLNamespace       = "http://www.w3.org/1999/xhtml"
 	ExpectedDoctypeHTML5 = "html"
 )
 
+// ContentValidationResult contains XHTML validation details.
 type ContentValidationResult struct {
 	Valid      bool
 	Errors     []ValidationError
@@ -35,14 +39,17 @@ type ContentValidationResult struct {
 	Namespace  string
 }
 
+// ContentValidator validates XHTML content documents.
 type ContentValidator struct{}
 
+// NewContentValidator returns a new content validator.
 func NewContentValidator() *ContentValidator {
 	return &ContentValidator{}
 }
 
+// ValidateFile validates content from a file path.
 func (v *ContentValidator) ValidateFile(filePath string) (*ContentValidationResult, error) {
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
@@ -53,10 +60,12 @@ func (v *ContentValidator) ValidateFile(filePath string) (*ContentValidationResu
 	return v.Validate(file)
 }
 
+// ValidateBytes validates content from in-memory data.
 func (v *ContentValidator) ValidateBytes(data []byte) (*ContentValidationResult, error) {
 	return v.Validate(strings.NewReader(string(data)))
 }
 
+// Validate validates content from an io.Reader.
 func (v *ContentValidator) Validate(reader io.Reader) (*ContentValidationResult, error) {
 	result := &ContentValidationResult{
 		Valid:  true,
@@ -76,7 +85,7 @@ func (v *ContentValidator) Validate(reader io.Reader) (*ContentValidationResult,
 
 		if tokenType == html.ErrorToken {
 			err := tokenizer.Err()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				break
 			}
 			result.Valid = false
@@ -112,7 +121,11 @@ func (v *ContentValidator) Validate(reader io.Reader) (*ContentValidationResult,
 			token := tokenizer.Token()
 			tagName := strings.ToLower(token.Data)
 
-			if tagName == "html" && !foundHTML {
+			switch tagName {
+			case "html":
+				if foundHTML {
+					break
+				}
 				foundHTML = true
 				result.HasHTML = true
 
@@ -135,13 +148,19 @@ func (v *ContentValidator) Validate(reader io.Reader) (*ContentValidationResult,
 						},
 					})
 				}
-			} else if tagName == "head" && !foundHead {
-				foundHead = true
-				result.HasHead = true
-			} else if tagName == "body" && !foundBody {
-				foundBody = true
-				result.HasBody = true
+			case "head":
+				if !foundHead {
+					foundHead = true
+					result.HasHead = true
+				}
+			case "body":
+				if !foundBody {
+					foundBody = true
+					result.HasBody = true
+				}
 			}
+		case html.EndTagToken, html.TextToken, html.SelfClosingTagToken, html.CommentToken, html.ErrorToken:
+			continue
 		}
 	}
 

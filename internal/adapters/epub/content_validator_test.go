@@ -191,8 +191,8 @@ func TestContentValidator_ValidateBytes_MalformedHTML(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	if result.Valid {
-		t.Error("Expected valid result (HTML parser is lenient)")
+	if !result.Valid {
+		t.Errorf("Expected valid result (HTML parser is lenient), got errors: %v", result.Errors)
 	}
 }
 
@@ -486,7 +486,7 @@ func TestContentValidator_ValidateFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "chapter.xhtml")
 
-	if err := os.WriteFile(tmpFile, []byte(xhtmlData), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, []byte(xhtmlData), 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 

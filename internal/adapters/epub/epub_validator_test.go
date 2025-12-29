@@ -226,7 +226,12 @@ func createEPUBWithInvalidOPF(t *testing.T) []byte {
 	return buf.Bytes()
 }
 
-func createEPUBWithInvalidNav(t *testing.T) []byte {
+type testFile struct {
+	path    string
+	content string
+}
+
+func buildEPUBWithOPFAndFiles(t *testing.T, opfContent, navContent string, extraFiles []testFile) []byte {
 	t.Helper()
 
 	buf := new(bytes.Buffer)
@@ -258,6 +263,44 @@ func createEPUBWithInvalidNav(t *testing.T) []byte {
 		t.Fatalf("Failed to write container.xml: %v", err)
 	}
 
+	opfWriter, err := zipWriter.Create("OEBPS/content.opf")
+	if err != nil {
+		t.Fatalf("Failed to create content.opf: %v", err)
+	}
+	if _, err := opfWriter.Write([]byte(opfContent)); err != nil {
+		t.Fatalf("Failed to write content.opf: %v", err)
+	}
+
+	if navContent != "" {
+		navWriter, err := zipWriter.Create("OEBPS/nav.xhtml")
+		if err != nil {
+			t.Fatalf("Failed to create nav.xhtml: %v", err)
+		}
+		if _, err := navWriter.Write([]byte(navContent)); err != nil {
+			t.Fatalf("Failed to write nav.xhtml: %v", err)
+		}
+	}
+
+	for _, file := range extraFiles {
+		writer, err := zipWriter.Create(file.path)
+		if err != nil {
+			t.Fatalf("Failed to create %s: %v", file.path, err)
+		}
+		if _, err := writer.Write([]byte(file.content)); err != nil {
+			t.Fatalf("Failed to write %s: %v", file.path, err)
+		}
+	}
+
+	if err := zipWriter.Close(); err != nil {
+		t.Fatalf("Failed to close zip writer: %v", err)
+	}
+
+	return buf.Bytes()
+}
+
+func createEPUBWithInvalidNav(t *testing.T) []byte {
+	t.Helper()
+
 	opfContent := `<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -274,14 +317,6 @@ func createEPUBWithInvalidNav(t *testing.T) []byte {
     <itemref idref="chapter1"/>
   </spine>
 </package>`
-
-	opfWriter, err := zipWriter.Create("OEBPS/content.opf")
-	if err != nil {
-		t.Fatalf("Failed to create content.opf: %v", err)
-	}
-	if _, err := opfWriter.Write([]byte(opfContent)); err != nil {
-		t.Fatalf("Failed to write content.opf: %v", err)
-	}
 
 	navContent := `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
@@ -294,14 +329,6 @@ func createEPUBWithInvalidNav(t *testing.T) []byte {
 </body>
 </html>`
 
-	navWriter, err := zipWriter.Create("OEBPS/nav.xhtml")
-	if err != nil {
-		t.Fatalf("Failed to create nav.xhtml: %v", err)
-	}
-	if _, err := navWriter.Write([]byte(navContent)); err != nil {
-		t.Fatalf("Failed to write nav.xhtml: %v", err)
-	}
-
 	chapter1Content := `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -312,53 +339,13 @@ func createEPUBWithInvalidNav(t *testing.T) []byte {
   <h1>Chapter 1</h1>
 </body>
 </html>`
-
-	chapter1Writer, err := zipWriter.Create("OEBPS/chapter1.xhtml")
-	if err != nil {
-		t.Fatalf("Failed to create chapter1.xhtml: %v", err)
-	}
-	if _, err := chapter1Writer.Write([]byte(chapter1Content)); err != nil {
-		t.Fatalf("Failed to write chapter1.xhtml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
+	return buildEPUBWithOPFAndFiles(t, opfContent, navContent, []testFile{
+		{path: "OEBPS/chapter1.xhtml", content: chapter1Content},
+	})
 }
 
 func createEPUBWithInvalidContent(t *testing.T) []byte {
 	t.Helper()
-
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	mimetypeWriter, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:   MimetypeFilename,
-		Method: zip.Store,
-	})
-	if err != nil {
-		t.Fatalf("Failed to create mimetype header: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte(ExpectedMimetype)); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
-
-	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
-<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-  <rootfiles>
-    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
-  </rootfiles>
-</container>`
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte(containerXML)); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
-	}
 
 	opfContent := `<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id">
@@ -377,14 +364,6 @@ func createEPUBWithInvalidContent(t *testing.T) []byte {
   </spine>
 </package>`
 
-	opfWriter, err := zipWriter.Create("OEBPS/content.opf")
-	if err != nil {
-		t.Fatalf("Failed to create content.opf: %v", err)
-	}
-	if _, err := opfWriter.Write([]byte(opfContent)); err != nil {
-		t.Fatalf("Failed to write content.opf: %v", err)
-	}
-
 	navContent := `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
@@ -399,14 +378,6 @@ func createEPUBWithInvalidContent(t *testing.T) []byte {
   </nav>
 </body>
 </html>`
-
-	navWriter, err := zipWriter.Create("OEBPS/nav.xhtml")
-	if err != nil {
-		t.Fatalf("Failed to create nav.xhtml: %v", err)
-	}
-	if _, err := navWriter.Write([]byte(navContent)); err != nil {
-		t.Fatalf("Failed to write nav.xhtml: %v", err)
-	}
 
 	chapter1Content := `<html>
 <head>
@@ -416,53 +387,13 @@ func createEPUBWithInvalidContent(t *testing.T) []byte {
   <h1>Chapter 1</h1>
 </body>
 </html>`
-
-	chapter1Writer, err := zipWriter.Create("OEBPS/chapter1.xhtml")
-	if err != nil {
-		t.Fatalf("Failed to create chapter1.xhtml: %v", err)
-	}
-	if _, err := chapter1Writer.Write([]byte(chapter1Content)); err != nil {
-		t.Fatalf("Failed to write chapter1.xhtml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
+	return buildEPUBWithOPFAndFiles(t, opfContent, navContent, []testFile{
+		{path: "OEBPS/chapter1.xhtml", content: chapter1Content},
+	})
 }
 
 func createEPUBWithMissingManifestFile(t *testing.T) []byte {
 	t.Helper()
-
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	mimetypeWriter, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:   MimetypeFilename,
-		Method: zip.Store,
-	})
-	if err != nil {
-		t.Fatalf("Failed to create mimetype header: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte(ExpectedMimetype)); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
-
-	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
-<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-  <rootfiles>
-    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
-  </rootfiles>
-</container>`
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte(containerXML)); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
-	}
 
 	opfContent := `<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id">
@@ -481,14 +412,6 @@ func createEPUBWithMissingManifestFile(t *testing.T) []byte {
   </spine>
 </package>`
 
-	opfWriter, err := zipWriter.Create("OEBPS/content.opf")
-	if err != nil {
-		t.Fatalf("Failed to create content.opf: %v", err)
-	}
-	if _, err := opfWriter.Write([]byte(opfContent)); err != nil {
-		t.Fatalf("Failed to write content.opf: %v", err)
-	}
-
 	navContent := `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
@@ -503,58 +426,11 @@ func createEPUBWithMissingManifestFile(t *testing.T) []byte {
   </nav>
 </body>
 </html>`
-
-	navWriter, err := zipWriter.Create("OEBPS/nav.xhtml")
-	if err != nil {
-		t.Fatalf("Failed to create nav.xhtml: %v", err)
-	}
-	if _, err := navWriter.Write([]byte(navContent)); err != nil {
-		t.Fatalf("Failed to write nav.xhtml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
+	return buildEPUBWithOPFAndFiles(t, opfContent, navContent, nil)
 }
 
 func createEPUBWithMultipleErrors(t *testing.T) []byte {
 	t.Helper()
-
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	otherWriter, err := zipWriter.Create("other.txt")
-	if err != nil {
-		t.Fatalf("Failed to create other file: %v", err)
-	}
-	if _, err := otherWriter.Write([]byte("some content")); err != nil {
-		t.Fatalf("Failed to write other file: %v", err)
-	}
-
-	mimetypeWriter, err := zipWriter.Create(MimetypeFilename)
-	if err != nil {
-		t.Fatalf("Failed to create mimetype: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte("application/wrong")); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
-
-	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
-<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-  <rootfiles>
-    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
-  </rootfiles>
-</container>`
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte(containerXML)); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
-	}
 
 	opfContent := `<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id">
@@ -565,19 +441,13 @@ func createEPUBWithMultipleErrors(t *testing.T) []byte {
   </metadata>
   <manifest>
     <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+    <item id="chapter1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>
   </manifest>
   <spine>
     <itemref idref="nav"/>
+    <itemref idref="chapter1"/>
   </spine>
 </package>`
-
-	opfWriter, err := zipWriter.Create("OEBPS/content.opf")
-	if err != nil {
-		t.Fatalf("Failed to create content.opf: %v", err)
-	}
-	if _, err := opfWriter.Write([]byte(opfContent)); err != nil {
-		t.Fatalf("Failed to write content.opf: %v", err)
-	}
 
 	navContent := `<?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -589,19 +459,17 @@ func createEPUBWithMultipleErrors(t *testing.T) []byte {
 </body>
 </html>`
 
-	navWriter, err := zipWriter.Create("OEBPS/nav.xhtml")
-	if err != nil {
-		t.Fatalf("Failed to create nav.xhtml: %v", err)
-	}
-	if _, err := navWriter.Write([]byte(navContent)); err != nil {
-		t.Fatalf("Failed to write nav.xhtml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
+	content := `<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Chapter 1</title>
+</head>
+<body>
+  <p>Missing DOCTYPE</p>
+</body>
+</html>`
+	return buildEPUBWithOPFAndFiles(t, opfContent, navContent, []testFile{
+		{path: "OEBPS/chapter1.xhtml", content: content},
+	})
 }
 
 func TestEPUBValidator_ValidateFile_CompleteValid(t *testing.T) {
@@ -611,7 +479,7 @@ func TestEPUBValidator_ValidateFile_CompleteValid(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -645,7 +513,7 @@ func TestEPUBValidator_ValidateFile_InvalidContainer(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -680,7 +548,7 @@ func TestEPUBValidator_ValidateFile_InvalidOPF(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -718,7 +586,7 @@ func TestEPUBValidator_ValidateFile_InvalidNav(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -756,7 +624,7 @@ func TestEPUBValidator_ValidateFile_InvalidContent(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -798,7 +666,7 @@ func TestEPUBValidator_ValidateFile_MissingManifestFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -836,7 +704,7 @@ func TestEPUBValidator_ValidateFile_MultipleErrors(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -852,7 +720,7 @@ func TestEPUBValidator_ValidateFile_MultipleErrors(t *testing.T) {
 	}
 
 	if len(report.Errors) < 3 {
-		t.Errorf("Expected at least 3 errors (container, OPF, nav), got %d", len(report.Errors))
+		t.Errorf("Expected at least 3 errors (OPF, nav, content), got %d", len(report.Errors))
 	}
 
 	errorCodes := make(map[string]bool)
@@ -860,16 +728,16 @@ func TestEPUBValidator_ValidateFile_MultipleErrors(t *testing.T) {
 		errorCodes[e.Code] = true
 	}
 
-	if !errorCodes[ErrorCodeMimetypeNotFirst] && !errorCodes[ErrorCodeMimetypeInvalid] {
-		t.Error("Expected mimetype error")
-	}
-
 	if !errorCodes[ErrorCodeOPFMissingTitle] {
 		t.Error("Expected OPF missing title error")
 	}
 
-	if !errorCodes[ErrorCodeNavMissingNavElement] && !errorCodes[ErrorCodeContentMissingDoctype] {
-		t.Error("Expected nav or content error")
+	if !errorCodes[ErrorCodeNavMissingNavElement] {
+		t.Error("Expected nav missing element error")
+	}
+
+	if !errorCodes[ErrorCodeContentMissingDoctype] {
+		t.Error("Expected content missing doctype error")
 	}
 }
 
@@ -901,7 +769,7 @@ func TestEPUBValidator_ValidateStructure(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -928,7 +796,7 @@ func TestEPUBValidator_ValidateMetadata(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -955,7 +823,7 @@ func TestEPUBValidator_ValidateMetadata_InvalidOPF(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -990,7 +858,7 @@ func TestEPUBValidator_ValidateContent_CompleteValidation(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -1020,7 +888,7 @@ func TestEPUBValidator_ErrorAggregation(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -1082,7 +950,7 @@ func TestEPUBValidator_ReportMetadata(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 

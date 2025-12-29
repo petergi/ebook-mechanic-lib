@@ -79,7 +79,7 @@ func TestReporterPackage_FileIO(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(tmpDir, tc.filename)
-			
+
 			err := tc.reporter.WriteToFile(ctx, report, path, options)
 			if err != nil {
 				t.Fatalf("WriteToFile failed: %v", err)
@@ -413,7 +413,7 @@ func BenchmarkFilter_FilterErrors(b *testing.B) {
 	}
 
 	filter := &Filter{
-		Categories: []string{"structure"},
+		Categories:  []string{"structure"},
 		MinSeverity: domain.SeverityWarning,
 	}
 

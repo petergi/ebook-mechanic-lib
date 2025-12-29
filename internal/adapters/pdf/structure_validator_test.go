@@ -560,7 +560,7 @@ func TestStructureValidator_ValidateFile(t *testing.T) {
 	testFile := filepath.Join(tmpDir, "test.pdf")
 
 	data := createMinimalValidPDF()
-	if err := os.WriteFile(testFile, data, 0644); err != nil {
+	if err := os.WriteFile(testFile, data, 0600); err != nil {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 

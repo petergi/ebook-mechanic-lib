@@ -11,14 +11,17 @@ import (
 	"github.com/example/project/internal/ports"
 )
 
+// JSONReporter formats validation reports as JSON.
 type JSONReporter struct {
 	filter *Filter
 }
 
+// NewJSONReporter returns a JSON reporter without filters.
 func NewJSONReporter() ports.Reporter {
 	return &JSONReporter{}
 }
 
+// NewJSONReporterWithFilter returns a JSON reporter with a filter applied.
 func NewJSONReporterWithFilter(filter *Filter) ports.Reporter {
 	return &JSONReporter{
 		filter: filter,
@@ -26,16 +29,16 @@ func NewJSONReporterWithFilter(filter *Filter) ports.Reporter {
 }
 
 type jsonReport struct {
-	FilePath       string                  `json:"file_path"`
-	FileType       string                  `json:"file_type"`
-	IsValid        bool                    `json:"is_valid"`
-	Errors         []jsonValidationError   `json:"errors"`
-	Warnings       []jsonValidationError   `json:"warnings"`
-	Info           []jsonValidationError   `json:"info"`
-	ValidationTime string                  `json:"validation_time"`
-	Duration       string                  `json:"duration"`
-	Summary        jsonSummary             `json:"summary"`
-	Metadata       map[string]interface{}  `json:"metadata,omitempty"`
+	FilePath       string                 `json:"file_path"`
+	FileType       string                 `json:"file_type"`
+	IsValid        bool                   `json:"is_valid"`
+	Errors         []jsonValidationError  `json:"errors"`
+	Warnings       []jsonValidationError  `json:"warnings"`
+	Info           []jsonValidationError  `json:"info"`
+	ValidationTime string                 `json:"validation_time"`
+	Duration       string                 `json:"duration"`
+	Summary        jsonSummary            `json:"summary"`
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 }
 
 type jsonValidationError struct {
@@ -56,10 +59,10 @@ type jsonErrorLocation struct {
 }
 
 type jsonSummary struct {
-	TotalIssues   int `json:"total_issues"`
-	ErrorCount    int `json:"error_count"`
-	WarningCount  int `json:"warning_count"`
-	InfoCount     int `json:"info_count"`
+	TotalIssues  int `json:"total_issues"`
+	ErrorCount   int `json:"error_count"`
+	WarningCount int `json:"warning_count"`
+	InfoCount    int `json:"info_count"`
 }
 
 type jsonMultiReport struct {
@@ -70,9 +73,10 @@ type jsonMultiReport struct {
 	InvalidFiles int          `json:"invalid_files"`
 }
 
-func (r *JSONReporter) Format(ctx context.Context, report *domain.ValidationReport, options *ports.ReportOptions) (string, error) {
+// Format renders a single report as JSON.
+func (r *JSONReporter) Format(_ context.Context, report *domain.ValidationReport, options *ports.ReportOptions) (string, error) {
 	jsonRep := r.convertReport(report, options)
-	
+
 	data, err := json.MarshalIndent(jsonRep, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal JSON: %w", err)
@@ -81,6 +85,7 @@ func (r *JSONReporter) Format(ctx context.Context, report *domain.ValidationRepo
 	return string(data), nil
 }
 
+// Write writes a JSON report to the provided writer.
 func (r *JSONReporter) Write(ctx context.Context, report *domain.ValidationReport, writer io.Writer, options *ports.ReportOptions) error {
 	formatted, err := r.Format(ctx, report, options)
 	if err != nil {
@@ -91,8 +96,9 @@ func (r *JSONReporter) Write(ctx context.Context, report *domain.ValidationRepor
 	return err
 }
 
+// WriteToFile writes a JSON report to a file.
 func (r *JSONReporter) WriteToFile(ctx context.Context, report *domain.ValidationReport, filePath string, options *ports.ReportOptions) error {
-	file, err := os.Create(filePath)
+	file, err := os.Create(filePath) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
@@ -103,7 +109,8 @@ func (r *JSONReporter) WriteToFile(ctx context.Context, report *domain.Validatio
 	return r.Write(ctx, report, file, options)
 }
 
-func (r *JSONReporter) FormatMultiple(ctx context.Context, reports []*domain.ValidationReport, options *ports.ReportOptions) (string, error) {
+// FormatMultiple renders multiple reports as JSON.
+func (r *JSONReporter) FormatMultiple(_ context.Context, reports []*domain.ValidationReport, options *ports.ReportOptions) (string, error) {
 	jsonReps := make([]jsonReport, 0, len(reports))
 	totalErrors := 0
 	totalWarnings := 0
@@ -114,11 +121,11 @@ func (r *JSONReporter) FormatMultiple(ctx context.Context, reports []*domain.Val
 	for _, report := range reports {
 		jsonRep := r.convertReport(report, options)
 		jsonReps = append(jsonReps, jsonRep)
-		
+
 		totalErrors += jsonRep.Summary.ErrorCount
 		totalWarnings += jsonRep.Summary.WarningCount
 		totalInfo += jsonRep.Summary.InfoCount
-		
+
 		if report.IsValid {
 			validFiles++
 		} else {
@@ -147,6 +154,7 @@ func (r *JSONReporter) FormatMultiple(ctx context.Context, reports []*domain.Val
 	return string(data), nil
 }
 
+// WriteMultiple writes multiple JSON reports to the provided writer.
 func (r *JSONReporter) WriteMultiple(ctx context.Context, reports []*domain.ValidationReport, writer io.Writer, options *ports.ReportOptions) error {
 	formatted, err := r.FormatMultiple(ctx, reports, options)
 	if err != nil {
@@ -157,7 +165,8 @@ func (r *JSONReporter) WriteMultiple(ctx context.Context, reports []*domain.Vali
 	return err
 }
 
-func (r *JSONReporter) WriteSummary(ctx context.Context, reports []*domain.ValidationReport, writer io.Writer, options *ports.ReportOptions) error {
+// WriteSummary writes a JSON summary for multiple reports.
+func (r *JSONReporter) WriteSummary(_ context.Context, reports []*domain.ValidationReport, writer io.Writer, _ *ports.ReportOptions) error {
 	totalErrors := 0
 	totalWarnings := 0
 	totalInfo := 0
@@ -168,7 +177,7 @@ func (r *JSONReporter) WriteSummary(ctx context.Context, reports []*domain.Valid
 		totalErrors += report.ErrorCount()
 		totalWarnings += report.WarningCount()
 		totalInfo += report.InfoCount()
-		
+
 		if report.IsValid {
 			validFiles++
 		} else {
@@ -241,7 +250,7 @@ func (r *JSONReporter) convertReport(report *domain.ValidationReport, options *p
 
 func (r *JSONReporter) convertErrors(errors []domain.ValidationError) []jsonValidationError {
 	result := make([]jsonValidationError, 0, len(errors))
-	
+
 	for _, err := range errors {
 		jsonErr := jsonValidationError{
 			Code:      err.Code,

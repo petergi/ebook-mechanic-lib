@@ -10,6 +10,7 @@ import (
 	"golang.org/x/net/html"
 )
 
+// Navigation validation error codes.
 const (
 	ErrorCodeNavNotWellFormed       = "EPUB-NAV-001"
 	ErrorCodeNavMissingTOC          = "EPUB-NAV-002"
@@ -19,17 +20,20 @@ const (
 	ErrorCodeNavMissingNavElement   = "EPUB-NAV-006"
 )
 
+// Navigation validation constants.
 const (
 	EPUBNamespace    = "http://www.idpf.org/2007/ops"
 	NavTypeTOC       = "toc"
 	NavTypeLandmarks = "landmarks"
 )
 
+// NavLink represents a single navigation link.
 type NavLink struct {
 	Href string
 	Text string
 }
 
+// NavValidationResult contains navigation validation details.
 type NavValidationResult struct {
 	Valid         bool
 	Errors        []ValidationError
@@ -39,14 +43,17 @@ type NavValidationResult struct {
 	LandmarkLinks []NavLink
 }
 
+// NavValidator validates EPUB navigation documents.
 type NavValidator struct{}
 
+// NewNavValidator returns a new navigation validator.
 func NewNavValidator() *NavValidator {
 	return &NavValidator{}
 }
 
+// ValidateFile validates a nav document from a file path.
 func (v *NavValidator) ValidateFile(filePath string) (*NavValidationResult, error) {
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
@@ -57,10 +64,12 @@ func (v *NavValidator) ValidateFile(filePath string) (*NavValidationResult, erro
 	return v.Validate(file)
 }
 
+// ValidateBytes validates a nav document from in-memory data.
 func (v *NavValidator) ValidateBytes(data []byte) (*NavValidationResult, error) {
 	return v.Validate(strings.NewReader(string(data)))
 }
 
+// Validate validates a nav document from an io.Reader.
 func (v *NavValidator) Validate(reader io.Reader) (*NavValidationResult, error) {
 	result := &NavValidationResult{
 		Valid:         true,
@@ -69,17 +78,17 @@ func (v *NavValidator) Validate(reader io.Reader) (*NavValidationResult, error) 
 		LandmarkLinks: make([]NavLink, 0),
 	}
 
-	doc, err := html.Parse(reader)
-	if err != nil {
+	doc, parseErr := html.Parse(reader)
+	if parseErr != nil {
 		result.Valid = false
 		result.Errors = append(result.Errors, ValidationError{
 			Code:    ErrorCodeNavNotWellFormed,
 			Message: "Navigation document is not well-formed XHTML",
 			Details: map[string]interface{}{
-				"error": err.Error(),
+				"error": parseErr.Error(),
 			},
 		})
-		return result, nil
+		return result, nil //nolint:nilerr
 	}
 
 	navElements := v.findNavElements(doc)
@@ -99,11 +108,12 @@ func (v *NavValidator) Validate(reader io.Reader) (*NavValidationResult, error) 
 	for _, navNode := range navElements {
 		epubType := v.getEpubType(navNode)
 
-		if epubType == NavTypeTOC {
+		switch epubType {
+		case NavTypeTOC:
 			tocFound = true
 			result.HasTOC = true
 			v.validateTOCNav(navNode, result)
-		} else if epubType == NavTypeLandmarks {
+		case NavTypeLandmarks:
 			result.HasLandmarks = true
 			v.validateLandmarksNav(navNode, result)
 		}
@@ -239,12 +249,10 @@ func (v *NavValidator) extractLinks(n *html.Node) []NavLink {
 
 			text := v.extractText(node)
 
-			if href != "" {
-				links = append(links, NavLink{
-					Href: href,
-					Text: strings.TrimSpace(text),
-				})
-			}
+			links = append(links, NavLink{
+				Href: href,
+				Text: strings.TrimSpace(text),
+			})
 		}
 
 		for c := node.FirstChild; c != nil; c = c.NextSibling {
@@ -291,9 +299,5 @@ func (v *NavValidator) isValidRelativeLink(href string) bool {
 	}
 
 	cleaned := path.Clean(href)
-	if strings.HasPrefix(cleaned, "..") {
-		return false
-	}
-
-	return true
+	return !strings.HasPrefix(cleaned, "..")
 }

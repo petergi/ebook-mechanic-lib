@@ -11,21 +11,25 @@ import (
 	"github.com/example/project/internal/ports"
 )
 
+// MarkdownReporter formats validation reports as Markdown.
 type MarkdownReporter struct {
 	filter *Filter
 }
 
+// NewMarkdownReporter returns a Markdown reporter without filters.
 func NewMarkdownReporter() ports.Reporter {
 	return &MarkdownReporter{}
 }
 
+// NewMarkdownReporterWithFilter returns a Markdown reporter with a filter applied.
 func NewMarkdownReporterWithFilter(filter *Filter) ports.Reporter {
 	return &MarkdownReporter{
 		filter: filter,
 	}
 }
 
-func (r *MarkdownReporter) Format(ctx context.Context, report *domain.ValidationReport, options *ports.ReportOptions) (string, error) {
+// Format renders a single report as Markdown.
+func (r *MarkdownReporter) Format(_ context.Context, report *domain.ValidationReport, options *ports.ReportOptions) (string, error) {
 	var sb strings.Builder
 
 	errors := report.Errors
@@ -51,7 +55,7 @@ func (r *MarkdownReporter) Format(ctx context.Context, report *domain.Validation
 	}
 
 	sb.WriteString(fmt.Sprintf("# Validation Report: %s\n\n", report.FilePath))
-	
+
 	if report.IsValid {
 		sb.WriteString("**Status:** ✅ Valid\n\n")
 	} else {
@@ -97,6 +101,7 @@ func (r *MarkdownReporter) Format(ctx context.Context, report *domain.Validation
 	return sb.String(), nil
 }
 
+// Write writes a Markdown report to the provided writer.
 func (r *MarkdownReporter) Write(ctx context.Context, report *domain.ValidationReport, writer io.Writer, options *ports.ReportOptions) error {
 	formatted, err := r.Format(ctx, report, options)
 	if err != nil {
@@ -107,8 +112,9 @@ func (r *MarkdownReporter) Write(ctx context.Context, report *domain.ValidationR
 	return err
 }
 
+// WriteToFile writes a Markdown report to a file.
 func (r *MarkdownReporter) WriteToFile(ctx context.Context, report *domain.ValidationReport, filePath string, options *ports.ReportOptions) error {
-	file, err := os.Create(filePath)
+	file, err := os.Create(filePath) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
@@ -119,6 +125,7 @@ func (r *MarkdownReporter) WriteToFile(ctx context.Context, report *domain.Valid
 	return r.Write(ctx, report, file, options)
 }
 
+// FormatMultiple renders multiple reports as Markdown.
 func (r *MarkdownReporter) FormatMultiple(ctx context.Context, reports []*domain.ValidationReport, options *ports.ReportOptions) (string, error) {
 	var sb strings.Builder
 
@@ -156,7 +163,7 @@ func (r *MarkdownReporter) FormatMultiple(ctx context.Context, reports []*domain
 			return "", err
 		}
 		sb.WriteString(reportStr)
-		
+
 		if i < len(reports)-1 {
 			sb.WriteString("---\n\n")
 		}
@@ -165,6 +172,7 @@ func (r *MarkdownReporter) FormatMultiple(ctx context.Context, reports []*domain
 	return sb.String(), nil
 }
 
+// WriteMultiple writes multiple Markdown reports to the provided writer.
 func (r *MarkdownReporter) WriteMultiple(ctx context.Context, reports []*domain.ValidationReport, writer io.Writer, options *ports.ReportOptions) error {
 	formatted, err := r.FormatMultiple(ctx, reports, options)
 	if err != nil {
@@ -175,7 +183,8 @@ func (r *MarkdownReporter) WriteMultiple(ctx context.Context, reports []*domain.
 	return err
 }
 
-func (r *MarkdownReporter) WriteSummary(ctx context.Context, reports []*domain.ValidationReport, writer io.Writer, options *ports.ReportOptions) error {
+// WriteSummary writes a Markdown summary for multiple reports.
+func (r *MarkdownReporter) WriteSummary(_ context.Context, reports []*domain.ValidationReport, writer io.Writer, _ *ports.ReportOptions) error {
 	var sb strings.Builder
 
 	totalErrors := 0
@@ -244,7 +253,7 @@ func (r *MarkdownReporter) writeErrorsTable(sb *strings.Builder, errors []domain
 		}
 
 		message := r.escapeMarkdown(err.Message)
-		
+
 		if options != nil && options.Verbose && len(err.Details) > 0 {
 			message += "<br>"
 			for key, value := range err.Details {
@@ -252,7 +261,7 @@ func (r *MarkdownReporter) writeErrorsTable(sb *strings.Builder, errors []domain
 			}
 		}
 
-		sb.WriteString(fmt.Sprintf("| `%s` | %s | %s |\n", err.Code, message, location))
+		fmt.Fprintf(sb, "| `%s` | %s | %s |\n", err.Code, message, location)
 	}
 }
 

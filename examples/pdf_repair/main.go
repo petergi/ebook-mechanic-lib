@@ -1,3 +1,4 @@
+// Package main provides an example program for EBMLib.
 package main
 
 import (
@@ -8,28 +9,32 @@ import (
 
 	"github.com/example/project/internal/adapters/pdf"
 	"github.com/example/project/internal/domain"
-	"github.com/example/project/internal/ports"
 )
 
 func main() {
 	fmt.Println("PDF Repair Service Example")
-	fmt.Println("===========================\n")
+	fmt.Println("===========================")
+	fmt.Println()
 
 	// Example 1: Basic repair workflow
-	example1_BasicRepairWorkflow()
+	example1BasicRepairWorkflow()
 
-	fmt.Println("\n==================================================\n")
+	fmt.Println()
+	fmt.Println("==================================================")
+	fmt.Println()
 
 	// Example 2: Handling unsafe repairs
-	example2_UnsafeRepairs()
+	example2UnsafeRepairs()
 
-	fmt.Println("\n==================================================\n")
+	fmt.Println()
+	fmt.Println("==================================================")
+	fmt.Println()
 
 	// Example 3: Batch repair
-	example3_BatchRepair()
+	example3BatchRepair()
 }
 
-func example1_BasicRepairWorkflow() {
+func example1BasicRepairWorkflow() {
 	fmt.Println("Example 1: Basic Repair Workflow")
 	fmt.Println("---------------------------------")
 
@@ -85,7 +90,7 @@ func example1_BasicRepairWorkflow() {
 	fmt.Println("✓ Preview completed successfully")
 }
 
-func example2_UnsafeRepairs() {
+func example2UnsafeRepairs() {
 	fmt.Println("Example 2: Handling Unsafe Repairs")
 	fmt.Println("-----------------------------------")
 
@@ -125,7 +130,8 @@ func example2_UnsafeRepairs() {
 	fmt.Printf("Can Auto-Repair: %v\n\n", preview.CanAutoRepair)
 
 	if !preview.CanAutoRepair {
-		fmt.Println("⚠ Manual intervention required!\n")
+		fmt.Println("⚠ Manual intervention required!")
+		fmt.Println()
 		fmt.Println("Warnings:")
 		for _, warning := range preview.Warnings {
 			fmt.Printf("  - %s\n", warning)
@@ -151,7 +157,8 @@ func example2_UnsafeRepairs() {
 			fmt.Println()
 		}
 
-		fmt.Printf("Summary: %d automated, %d manual\n\n", automatedCount, manualCount)
+		fmt.Printf("Summary: %d automated, %d manual\n", automatedCount, manualCount)
+		fmt.Println()
 
 		fmt.Println("Recommended Tools for Manual Repairs:")
 		fmt.Println("  - qpdf: For structural repairs and xref rebuild")
@@ -161,7 +168,7 @@ func example2_UnsafeRepairs() {
 	}
 }
 
-func example3_BatchRepair() {
+func example3BatchRepair() {
 	fmt.Println("Example 3: Batch Repair with Rollback")
 	fmt.Println("--------------------------------------")
 
@@ -215,21 +222,24 @@ func example3_BatchRepair() {
 		fmt.Printf("Processing: %s\n", file.path)
 
 		if file.report.IsValid {
-			fmt.Println("  ✓ Valid - skipping\n")
+			fmt.Println("  ✓ Valid - skipping")
+			fmt.Println()
 			skippedCount++
 			continue
 		}
 
 		preview, err := repairService.Preview(ctx, file.report)
 		if err != nil {
-			fmt.Printf("  ✗ Preview failed: %v\n\n", err)
+			fmt.Printf("  ✗ Preview failed: %v\n", err)
+			fmt.Println()
 			failedCount++
 			continue
 		}
 
 		if !preview.CanAutoRepair {
 			fmt.Println("  ⚠ Manual intervention required - skipping")
-			fmt.Printf("    Reason: %s\n\n", preview.Warnings[0])
+			fmt.Printf("    Reason: %s\n", preview.Warnings[0])
+			fmt.Println()
 			skippedCount++
 			continue
 		}
@@ -260,7 +270,8 @@ func example3_BatchRepair() {
 		   }
 		*/
 
-		fmt.Println("  ✓ Repaired successfully\n")
+		fmt.Println("  ✓ Repaired successfully")
+		fmt.Println()
 		repairedCount++
 	}
 
@@ -269,36 +280,4 @@ func example3_BatchRepair() {
 	fmt.Printf("  Skipped: %d\n", skippedCount)
 	fmt.Printf("  Failed: %d\n", failedCount)
 	fmt.Printf("  Total: %d\n", len(files))
-}
-
-// Helper function to check if error is repairable
-func checkRepairability(ctx context.Context, service ports.PDFRepairService, errors []domain.ValidationError) {
-	fmt.Println("Checking repairability of errors:")
-
-	for i, err := range errors {
-		canRepair := service.CanRepair(ctx, &err)
-		status := "✗ Not repairable"
-		if canRepair {
-			status = "✓ Repairable"
-		}
-
-		fmt.Printf("  %d. %s (%s) - %s\n", i+1, err.Code, err.Message, status)
-	}
-	fmt.Println()
-}
-
-// Helper function to display detailed action information
-func displayActionDetails(action ports.RepairAction) {
-	fmt.Printf("Action Details:\n")
-	fmt.Printf("  Type: %s\n", action.Type)
-	fmt.Printf("  Description: %s\n", action.Description)
-	fmt.Printf("  Target: %s\n", action.Target)
-	fmt.Printf("  Automated: %v\n", action.Automated)
-
-	if len(action.Details) > 0 {
-		fmt.Printf("  Details:\n")
-		for k, v := range action.Details {
-			fmt.Printf("    %s: %v\n", k, v)
-		}
-	}
 }

@@ -226,7 +226,7 @@ func TestColorScheme_ColorizeForSeverity(t *testing.T) {
 func TestColorScheme_ColorizeForSeverity_Unknown(t *testing.T) {
 	scheme := NewColorScheme(true)
 	text := "test message"
-	
+
 	result := scheme.ColorizeForSeverity(text, domain.Severity("unknown"))
 
 	if result != text {

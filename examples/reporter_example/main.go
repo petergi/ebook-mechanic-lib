@@ -1,3 +1,4 @@
+// Package main provides an example program for EBMLib.
 package main
 
 import (
@@ -18,7 +19,8 @@ func main() {
 
 	report := createSampleValidationReport()
 
-	fmt.Println("=== Reporter Examples ===\n")
+	fmt.Println("=== Reporter Examples ===")
+	fmt.Println()
 
 	demonstrateJSONReporter(ctx, report)
 	demonstrateMarkdownReporter(ctx, report)
@@ -26,7 +28,8 @@ func main() {
 	demonstrateFiltering(ctx, report)
 	demonstrateMultipleReports(ctx)
 
-	fmt.Println("\nDone! Check the generated files in the current directory.")
+	fmt.Println()
+	fmt.Println("Done! Check the generated files in the current directory.")
 }
 
 func demonstrateJSONReporter(ctx context.Context, report *domain.ValidationReport) {
@@ -59,7 +62,8 @@ func demonstrateJSONReporter(ctx context.Context, report *domain.ValidationRepor
 	if err != nil {
 		log.Printf("Error writing JSON file: %v\n", err)
 	} else {
-		fmt.Println("Full report written to: report.json\n")
+		fmt.Println("Full report written to: report.json")
+		fmt.Println()
 	}
 }
 
@@ -93,7 +97,8 @@ func demonstrateMarkdownReporter(ctx context.Context, report *domain.ValidationR
 	if err != nil {
 		log.Printf("Error writing Markdown file: %v\n", err)
 	} else {
-		fmt.Println("Full report written to: report.md\n")
+		fmt.Println("Full report written to: report.md")
+		fmt.Println()
 	}
 }
 
@@ -132,7 +137,9 @@ func demonstrateTextReporter(ctx context.Context, report *domain.ValidationRepor
 	if err != nil {
 		log.Printf("Error writing text file: %v\n", err)
 	} else {
-		fmt.Println("\nReport (without colors) written to: report.txt\n")
+		fmt.Println()
+		fmt.Println("Report (without colors) written to: report.txt")
+		fmt.Println()
 	}
 }
 
@@ -157,7 +164,8 @@ func demonstrateFiltering(ctx context.Context, report *domain.ValidationReport) 
 		fmt.Printf("   Found %d errors (warnings/info filtered out)\n", countOccurrences(result, `"severity": "error"`))
 	}
 
-	fmt.Println("\nb) Filter by minimum severity (warnings and above):")
+	fmt.Println()
+	fmt.Println("b) Filter by minimum severity (warnings and above):")
 	filter2 := &reporter.Filter{
 		MinSeverity: domain.SeverityWarning,
 	}
@@ -173,7 +181,8 @@ func demonstrateFiltering(ctx context.Context, report *domain.ValidationReport) 
 		fmt.Printf("   Output length: %d chars (info messages filtered)\n", len(result2))
 	}
 
-	fmt.Println("\nc) Filter by category (structure issues only):")
+	fmt.Println()
+	fmt.Println("c) Filter by category (structure issues only):")
 	filter3 := &reporter.Filter{
 		Categories: []string{"structure"},
 	}
@@ -182,7 +191,8 @@ func demonstrateFiltering(ctx context.Context, report *domain.ValidationReport) 
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 	} else {
-		fmt.Printf("   Output length: %d chars (only structure category)\n\n", len(result3))
+		fmt.Printf("   Output length: %d chars (only structure category)\n", len(result3))
+		fmt.Println()
 	}
 }
 
@@ -203,7 +213,13 @@ func demonstrateMultipleReports(ctx context.Context) {
 	}
 
 	var buf bytes.Buffer
-	err := textReporter.WriteSummary(ctx, reports, &buf, options)
+	multiReporter, ok := textReporter.(ports.MultiReporter)
+	if !ok {
+		log.Printf("Error generating summary: text reporter does not support summaries\n")
+		return
+	}
+
+	err := multiReporter.WriteSummary(ctx, reports, &buf, options)
 	if err != nil {
 		log.Printf("Error generating summary: %v\n", err)
 		return
@@ -214,7 +230,7 @@ func demonstrateMultipleReports(ctx context.Context) {
 	jsonReporter := reporter.NewJSONReporter()
 	err = jsonReporter.WriteToFile(ctx, &domain.ValidationReport{}, "summary.json", options)
 	if err == nil {
-		err = os.Remove("summary.json")
+		_ = os.Remove("summary.json")
 	}
 }
 
@@ -254,10 +270,10 @@ func createSampleValidationReport() *domain.ValidationReport {
 					Path:   "OEBPS/content.opf",
 				},
 				Details: map[string]interface{}{
-					"category":      "structure",
-					"standard":      "EPUB3",
-					"missing_item":  "chapter4.xhtml",
-					"spine_idref":   "ch4",
+					"category":     "structure",
+					"standard":     "EPUB3",
+					"missing_item": "chapter4.xhtml",
+					"spine_idref":  "ch4",
 				},
 			},
 		},
@@ -274,8 +290,8 @@ func createSampleValidationReport() *domain.ValidationReport {
 					Path:   "OEBPS/Text/chapter1.xhtml",
 				},
 				Details: map[string]interface{}{
-					"category": "content",
-					"element":  "font",
+					"category":       "content",
+					"element":        "font",
 					"recommendation": "Use CSS for styling instead",
 				},
 			},
@@ -289,9 +305,9 @@ func createSampleValidationReport() *domain.ValidationReport {
 					Path: "OEBPS/Images/cover.jpg",
 				},
 				Details: map[string]interface{}{
-					"category":      "optimization",
-					"file_size":     "5.2MB",
-					"recommended":   "2MB",
+					"category":    "optimization",
+					"file_size":   "5.2MB",
+					"recommended": "2MB",
 				},
 			},
 		},

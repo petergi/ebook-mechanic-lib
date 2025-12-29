@@ -663,7 +663,7 @@ func main() {
 			continue
 		}
 
-		if err := os.WriteFile(filePath, data, 0644); err != nil {
+		if err := os.WriteFile(filePath, data, 0600); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to write %s: %v\n", filename, err)
 			continue
 		}

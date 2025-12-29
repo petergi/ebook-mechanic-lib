@@ -149,7 +149,7 @@ func ValidatePDF(filePath string) (*ValidationReport, error) {
 //	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 //	defer cancel()
 //	report, err := ebmlib.ValidatePDFWithContext(ctx, "document.pdf")
-func ValidatePDFWithContext(ctx context.Context, filePath string) (*ValidationReport, error) {
+func ValidatePDFWithContext(_ context.Context, filePath string) (*ValidationReport, error) {
 	validator := pdf.NewStructureValidator()
 	result, err := validator.ValidateFile(filePath)
 	if err != nil {
@@ -172,7 +172,7 @@ func ValidatePDFReader(reader io.Reader) (*ValidationReport, error) {
 
 // ValidatePDFReaderWithContext validates a PDF from an io.Reader with context support.
 // Combines the benefits of ValidatePDFReader and context-aware operations.
-func ValidatePDFReaderWithContext(ctx context.Context, reader io.Reader) (*ValidationReport, error) {
+func ValidatePDFReaderWithContext(_ context.Context, reader io.Reader) (*ValidationReport, error) {
 	validator := pdf.NewStructureValidator()
 	result, err := validator.ValidateReader(reader)
 	if err != nil {
@@ -416,6 +416,8 @@ func FormatReportWithOptions(ctx context.Context, report *ValidationReport, opti
 		rep = reporter.NewTextReporter()
 	case FormatMarkdown:
 		rep = reporter.NewMarkdownReporter()
+	case FormatHTML, FormatXML:
+		return "", fmt.Errorf("unsupported format: %s", options.Format)
 	default:
 		return "", fmt.Errorf("unsupported format: %s", options.Format)
 	}
@@ -447,6 +449,8 @@ func WriteReportWithContext(ctx context.Context, report *ValidationReport, write
 		rep = reporter.NewTextReporter()
 	case FormatMarkdown:
 		rep = reporter.NewMarkdownReporter()
+	case FormatHTML, FormatXML:
+		return fmt.Errorf("unsupported format: %s", options.Format)
 	default:
 		return fmt.Errorf("unsupported format: %s", options.Format)
 	}
@@ -480,6 +484,8 @@ func WriteReportToFileWithContext(ctx context.Context, report *ValidationReport,
 		rep = reporter.NewTextReporter()
 	case FormatMarkdown:
 		rep = reporter.NewMarkdownReporter()
+	case FormatHTML, FormatXML:
+		return fmt.Errorf("unsupported format: %s", options.Format)
 	default:
 		return fmt.Errorf("unsupported format: %s", options.Format)
 	}

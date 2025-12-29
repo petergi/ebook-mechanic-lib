@@ -1,3 +1,4 @@
+// Package epub provides EPUB validation and repair adapters.
 package epub
 
 import (
@@ -10,51 +11,60 @@ import (
 	"strings"
 )
 
+// Container validation error codes.
 const (
-	ErrorCodeZIPInvalid            = "EPUB-CONTAINER-001"
-	ErrorCodeMimetypeInvalid       = "EPUB-CONTAINER-002"
-	ErrorCodeMimetypeNotFirst      = "EPUB-CONTAINER-003"
-	ErrorCodeContainerXMLMissing   = "EPUB-CONTAINER-004"
-	ErrorCodeContainerXMLInvalid   = "EPUB-CONTAINER-005"
+	ErrorCodeZIPInvalid          = "EPUB-CONTAINER-001"
+	ErrorCodeMimetypeInvalid     = "EPUB-CONTAINER-002"
+	ErrorCodeMimetypeNotFirst    = "EPUB-CONTAINER-003"
+	ErrorCodeContainerXMLMissing = "EPUB-CONTAINER-004"
+	ErrorCodeContainerXMLInvalid = "EPUB-CONTAINER-005"
 )
 
+// EPUB container constants.
 const (
-	ExpectedMimetype     = "application/epub+zip"
-	MimetypeFilename     = "mimetype"
-	ContainerXMLPath     = "META-INF/container.xml"
+	ExpectedMimetype = "application/epub+zip"
+	MimetypeFilename = "mimetype"
+	ContainerXMLPath = "META-INF/container.xml"
 )
 
+// ContainerXML models META-INF/container.xml.
 type ContainerXML struct {
 	XMLName   xml.Name   `xml:"container"`
 	Version   string     `xml:"version,attr"`
 	Rootfiles []Rootfile `xml:"rootfiles>rootfile"`
 }
 
+// Rootfile describes a single rootfile entry in container.xml.
 type Rootfile struct {
 	FullPath  string `xml:"full-path,attr"`
 	MediaType string `xml:"media-type,attr"`
 }
 
+// ValidationError captures container validation issues.
 type ValidationError struct {
 	Code    string
 	Message string
 	Details map[string]interface{}
 }
 
+// ValidationResult aggregates container validation findings.
 type ValidationResult struct {
-	Valid      bool
-	Errors     []ValidationError
-	Rootfiles  []Rootfile
+	Valid     bool
+	Errors    []ValidationError
+	Rootfiles []Rootfile
 }
 
+// ContainerValidator validates EPUB container structure.
 type ContainerValidator struct{}
 
+// NewContainerValidator returns a new container validator.
 func NewContainerValidator() *ContainerValidator {
 	return &ContainerValidator{}
 }
 
+// ValidateFile validates an EPUB file on disk.
 func (v *ContainerValidator) ValidateFile(filePath string) (*ValidationResult, error) {
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
@@ -70,23 +80,24 @@ func (v *ContainerValidator) ValidateFile(filePath string) (*ValidationResult, e
 	return v.Validate(file, fileInfo.Size())
 }
 
+// Validate validates EPUB container structure from a reader.
 func (v *ContainerValidator) Validate(reader io.ReaderAt, size int64) (*ValidationResult, error) {
 	result := &ValidationResult{
 		Valid:  true,
 		Errors: make([]ValidationError, 0),
 	}
 
-	zipReader, err := zip.NewReader(reader, size)
-	if err != nil {
+	zipReader, zipErr := zip.NewReader(reader, size)
+	if zipErr != nil {
 		result.Valid = false
 		result.Errors = append(result.Errors, ValidationError{
 			Code:    ErrorCodeZIPInvalid,
 			Message: "File is not a valid ZIP archive",
 			Details: map[string]interface{}{
-				"error": err.Error(),
+				"error": zipErr.Error(),
 			},
 		})
-		return result, nil
+		return result, nil //nolint:nilerr
 	}
 
 	if err := v.validateMimetype(zipReader, result); err != nil {
@@ -239,6 +250,7 @@ func (v *ContainerValidator) validateContainerXML(zipReader *zip.Reader, result 
 	return nil
 }
 
+// ValidateBytes validates EPUB container structure from in-memory data.
 func (v *ContainerValidator) ValidateBytes(data []byte) (*ValidationResult, error) {
 	reader := bytes.NewReader(data)
 	return v.Validate(reader, int64(len(data)))

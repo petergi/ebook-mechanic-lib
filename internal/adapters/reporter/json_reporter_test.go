@@ -61,10 +61,10 @@ func TestJSONReporter_FormatWithErrors(t *testing.T) {
 			Severity:  domain.SeverityError,
 			Timestamp: time.Now(),
 			Location: &domain.ErrorLocation{
-				File: "content.opf",
-				Line: 10,
+				File:   "content.opf",
+				Line:   10,
 				Column: 5,
-				Path: "OPS/content.opf",
+				Path:   "OPS/content.opf",
 			},
 			Details: map[string]interface{}{
 				"category": "structure",
@@ -196,7 +196,7 @@ func TestJSONReporter_WriteToFile(t *testing.T) {
 		t.Fatalf("WriteToFile failed: %v", err)
 	}
 
-	data, err := os.ReadFile(outputPath)
+	data, err := os.ReadFile(outputPath) //nolint:gosec
 	if err != nil {
 		t.Fatalf("Failed to read file: %v", err)
 	}
@@ -307,7 +307,7 @@ func TestJSONReporter_WriteSummary(t *testing.T) {
 
 func TestJSONReporter_WithFilter(t *testing.T) {
 	ctx := context.Background()
-	
+
 	filter := &Filter{
 		Severities: []domain.Severity{domain.SeverityError},
 	}

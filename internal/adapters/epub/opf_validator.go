@@ -10,70 +10,79 @@ import (
 	"strings"
 )
 
+// OPF validation error codes.
 const (
-	ErrorCodeOPFXMLInvalid            = "EPUB-OPF-001"
-	ErrorCodeOPFMissingTitle          = "EPUB-OPF-002"
-	ErrorCodeOPFMissingIdentifier     = "EPUB-OPF-003"
-	ErrorCodeOPFMissingLanguage       = "EPUB-OPF-004"
-	ErrorCodeOPFMissingModified       = "EPUB-OPF-005"
-	ErrorCodeOPFInvalidUniqueID       = "EPUB-OPF-006"
-	ErrorCodeOPFMissingManifest       = "EPUB-OPF-007"
-	ErrorCodeOPFMissingSpine          = "EPUB-OPF-008"
-	ErrorCodeOPFMissingNavDocument    = "EPUB-OPF-009"
-	ErrorCodeOPFInvalidManifestItem   = "EPUB-OPF-010"
-	ErrorCodeOPFInvalidSpineItem      = "EPUB-OPF-011"
-	ErrorCodeOPFMissingMetadata       = "EPUB-OPF-012"
-	ErrorCodeOPFInvalidPackage        = "EPUB-OPF-013"
-	ErrorCodeOPFDuplicateID           = "EPUB-OPF-014"
-	ErrorCodeOPFFileNotFound          = "EPUB-OPF-015"
+	ErrorCodeOPFXMLInvalid          = "EPUB-OPF-001"
+	ErrorCodeOPFMissingTitle        = "EPUB-OPF-002"
+	ErrorCodeOPFMissingIdentifier   = "EPUB-OPF-003"
+	ErrorCodeOPFMissingLanguage     = "EPUB-OPF-004"
+	ErrorCodeOPFMissingModified     = "EPUB-OPF-005"
+	ErrorCodeOPFInvalidUniqueID     = "EPUB-OPF-006"
+	ErrorCodeOPFMissingManifest     = "EPUB-OPF-007"
+	ErrorCodeOPFMissingSpine        = "EPUB-OPF-008"
+	ErrorCodeOPFMissingNavDocument  = "EPUB-OPF-009"
+	ErrorCodeOPFInvalidManifestItem = "EPUB-OPF-010"
+	ErrorCodeOPFInvalidSpineItem    = "EPUB-OPF-011"
+	ErrorCodeOPFMissingMetadata     = "EPUB-OPF-012"
+	ErrorCodeOPFInvalidPackage      = "EPUB-OPF-013"
+	ErrorCodeOPFDuplicateID         = "EPUB-OPF-014"
+	ErrorCodeOPFFileNotFound        = "EPUB-OPF-015"
 )
 
+// OPF namespace constants.
 const (
-	DCNamespace      = "http://purl.org/dc/elements/1.1/"
-	OPFNamespace     = "http://www.idpf.org/2007/opf"
-	DCTermsProperty  = "dcterms:modified"
+	DCNamespace     = "http://purl.org/dc/elements/1.1/"
+	OPFNamespace    = "http://www.idpf.org/2007/opf"
+	DCTermsProperty = "dcterms:modified"
 )
 
+// Package models an OPF package document.
 type Package struct {
-	XMLName        xml.Name        `xml:"package"`
-	Version        string          `xml:"version,attr"`
-	UniqueID       string          `xml:"unique-identifier,attr"`
-	Metadata       Metadata        `xml:"metadata"`
-	Manifest       Manifest        `xml:"manifest"`
-	Spine          Spine           `xml:"spine"`
+	XMLName  xml.Name `xml:"package"`
+	Version  string   `xml:"version,attr"`
+	UniqueID string   `xml:"unique-identifier,attr"`
+	Metadata Metadata `xml:"metadata"`
+	Manifest Manifest `xml:"manifest"`
+	Spine    Spine    `xml:"spine"`
 }
 
+// Metadata captures OPF metadata entries.
 type Metadata struct {
-	XMLName    xml.Name         `xml:"metadata"`
-	Titles     []DCElement      `xml:"title"`
-	Identifiers []DCIdentifier  `xml:"identifier"`
-	Languages  []DCElement      `xml:"language"`
-	Meta       []MetaElement    `xml:"meta"`
+	XMLName     xml.Name       `xml:"metadata"`
+	Titles      []DCElement    `xml:"title"`
+	Identifiers []DCIdentifier `xml:"identifier"`
+	Languages   []DCElement    `xml:"language"`
+	Meta        []MetaElement  `xml:"meta"`
 }
 
+// DCElement represents a Dublin Core element value.
 type DCElement struct {
 	XMLName xml.Name `xml:""`
 	Value   string   `xml:",chardata"`
 	ID      string   `xml:"id,attr,omitempty"`
 }
 
+// DCIdentifier represents a Dublin Core identifier value.
 type DCIdentifier struct {
 	XMLName xml.Name `xml:"identifier"`
 	Value   string   `xml:",chardata"`
 	ID      string   `xml:"id,attr,omitempty"`
 }
 
+// MetaElement represents an OPF meta element.
 type MetaElement struct {
 	XMLName  xml.Name `xml:"meta"`
 	Property string   `xml:"property,attr,omitempty"`
 	Value    string   `xml:",chardata"`
 }
 
+// Manifest captures the list of content items.
 type Manifest struct {
 	XMLName xml.Name       `xml:"manifest"`
 	Items   []ManifestItem `xml:"item"`
 }
 
+// ManifestItem describes a single manifest entry.
 type ManifestItem struct {
 	XMLName    xml.Name `xml:"item"`
 	ID         string   `xml:"id,attr"`
@@ -82,38 +91,45 @@ type ManifestItem struct {
 	Properties string   `xml:"properties,attr,omitempty"`
 }
 
+// Spine describes the reading order.
 type Spine struct {
 	XMLName xml.Name    `xml:"spine"`
 	Items   []SpineItem `xml:"itemref"`
 }
 
+// SpineItem references a manifest item in the spine.
 type SpineItem struct {
 	XMLName xml.Name `xml:"itemref"`
 	IDRef   string   `xml:"idref,attr"`
 }
 
+// OPFValidationResult aggregates OPF validation findings.
 type OPFValidationResult struct {
-	Valid      bool
-	Errors     []ValidationError
-	Package    *Package
+	Valid   bool
+	Errors  []ValidationError
+	Package *Package
 }
 
+// OPFValidator validates OPF package documents.
 type OPFValidator struct{}
 
+// NewOPFValidator returns a new OPF validator.
 func NewOPFValidator() *OPFValidator {
 	return &OPFValidator{}
 }
 
+// ValidateFile validates an OPF file from disk.
 func (v *OPFValidator) ValidateFile(filePath string) (*OPFValidationResult, error) {
-	data, err := os.ReadFile(filePath)
+	data, err := os.ReadFile(filePath) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 	return v.ValidateBytes(data)
 }
 
+// ValidateFromEPUB validates an OPF file inside an EPUB.
 func (v *OPFValidator) ValidateFromEPUB(epubPath string, opfPath string) (*OPFValidationResult, error) {
-	file, err := os.Open(epubPath)
+	file, err := os.Open(epubPath) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to open EPUB file: %w", err)
 	}
@@ -170,6 +186,7 @@ func (v *OPFValidator) ValidateFromEPUB(epubPath string, opfPath string) (*OPFVa
 	return v.ValidateBytes(opfData)
 }
 
+// ValidateBytes validates OPF data from memory.
 func (v *OPFValidator) ValidateBytes(data []byte) (*OPFValidationResult, error) {
 	result := &OPFValidationResult{
 		Valid:  true,
@@ -177,16 +194,16 @@ func (v *OPFValidator) ValidateBytes(data []byte) (*OPFValidationResult, error) 
 	}
 
 	var pkg Package
-	if err := xml.Unmarshal(data, &pkg); err != nil {
+	if unmarshalErr := xml.Unmarshal(data, &pkg); unmarshalErr != nil {
 		result.Valid = false
 		result.Errors = append(result.Errors, ValidationError{
 			Code:    ErrorCodeOPFXMLInvalid,
 			Message: "OPF file is not valid XML",
 			Details: map[string]interface{}{
-				"error": err.Error(),
+				"error": unmarshalErr.Error(),
 			},
 		})
-		return result, nil
+		return result, nil //nolint:nilerr
 	}
 
 	result.Package = &pkg
@@ -419,6 +436,7 @@ func (v *OPFValidator) validateSpine(spine *Spine, manifest *Manifest, result *O
 	}
 }
 
+// ValidateBytesReader validates OPF data from an io.ReaderAt.
 func (v *OPFValidator) ValidateBytesReader(reader io.ReaderAt, size int64) (*OPFValidationResult, error) {
 	buf := make([]byte, size)
 	_, err := reader.ReadAt(buf, 0)
@@ -428,6 +446,7 @@ func (v *OPFValidator) ValidateBytesReader(reader io.ReaderAt, size int64) (*OPF
 	return v.ValidateBytes(buf)
 }
 
+// ValidateBytesBuffer validates OPF data from a byte slice.
 func (v *OPFValidator) ValidateBytesBuffer(data []byte) (*OPFValidationResult, error) {
 	reader := bytes.NewReader(data)
 	return v.ValidateBytesReader(reader, int64(len(data)))

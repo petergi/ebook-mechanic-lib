@@ -1,3 +1,4 @@
+// Package main provides an example program for EBMLib.
 package main
 
 import (
@@ -29,7 +30,7 @@ func main() {
 	if result.Valid {
 		fmt.Println("✓ EPUB container is valid!")
 		fmt.Println()
-		
+
 		if len(result.Rootfiles) > 0 {
 			fmt.Println("Rootfiles:")
 			for i, rootfile := range result.Rootfiles {
@@ -39,12 +40,12 @@ func main() {
 	} else {
 		fmt.Println("✗ EPUB container is invalid")
 		fmt.Println()
-		
+
 		if len(result.Errors) > 0 {
 			fmt.Println("Errors:")
 			for i, validationError := range result.Errors {
 				fmt.Printf("  %d. [%s] %s\n", i+1, validationError.Code, validationError.Message)
-				
+
 				if len(validationError.Details) > 0 {
 					fmt.Println("     Details:")
 					for key, value := range validationError.Details {

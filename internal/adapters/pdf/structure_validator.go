@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/unidoc/unipdf/v3/core"
-	"github.com/unidoc/unipdf/v3/model"
 )
 
+// PDF validation error codes.
 const (
 	ErrorCodePDFHeader001    = "PDF-HEADER-001"
 	ErrorCodePDFHeader002    = "PDF-HEADER-002"
@@ -27,31 +27,37 @@ const (
 	ErrorCodePDFStructure012 = "PDF-STRUCTURE-012"
 )
 
+// ValidationError captures PDF structure validation issues.
 type ValidationError struct {
 	Code    string
 	Message string
 	Details map[string]interface{}
 }
 
+// StructureValidationResult aggregates structure validation findings.
 type StructureValidationResult struct {
 	Valid  bool
 	Errors []ValidationError
 }
 
+// StructureValidator validates basic PDF structure.
 type StructureValidator struct{}
 
+// NewStructureValidator returns a new PDF structure validator.
 func NewStructureValidator() *StructureValidator {
 	return &StructureValidator{}
 }
 
+// ValidateFile validates a PDF file from disk.
 func (v *StructureValidator) ValidateFile(filePath string) (*StructureValidationResult, error) {
-	data, err := os.ReadFile(filePath)
+	data, err := os.ReadFile(filePath) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 	return v.ValidateBytes(data)
 }
 
+// ValidateReader validates a PDF from an io.Reader.
 func (v *StructureValidator) ValidateReader(reader io.Reader) (*StructureValidationResult, error) {
 	data, err := io.ReadAll(reader)
 	if err != nil {
@@ -60,6 +66,7 @@ func (v *StructureValidator) ValidateReader(reader io.Reader) (*StructureValidat
 	return v.ValidateBytes(data)
 }
 
+// ValidateBytes validates a PDF from in-memory data.
 func (v *StructureValidator) ValidateBytes(data []byte) (*StructureValidationResult, error) {
 	result := &StructureValidationResult{
 		Valid:  true,
@@ -74,9 +81,7 @@ func (v *StructureValidator) ValidateBytes(data []byte) (*StructureValidationRes
 		return result, nil
 	}
 
-	if err := v.validateWithUnipdf(data, result); err != nil {
-		return result, err
-	}
+	v.validateWithUnipdf(data, result)
 
 	result.Valid = len(result.Errors) == 0
 	return result, nil
@@ -159,11 +164,12 @@ func (v *StructureValidator) validateTrailer(data []byte, result *StructureValid
 	}
 }
 
-func (v *StructureValidator) validateWithUnipdf(data []byte, result *StructureValidationResult) error {
+func (v *StructureValidator) validateWithUnipdf(data []byte, result *StructureValidationResult) {
 	reader := bytes.NewReader(data)
-	pdfReader, err := model.NewPdfReader(reader)
+	parser, err := core.NewParser(reader)
 	if err != nil {
-		if strings.Contains(err.Error(), "xref") || strings.Contains(err.Error(), "cross") {
+		errLower := strings.ToLower(err.Error())
+		if strings.Contains(errLower, "xref") || strings.Contains(errLower, "cross") {
 			result.Errors = append(result.Errors, ValidationError{
 				Code:    ErrorCodePDFXref001,
 				Message: "Invalid or damaged cross-reference table",
@@ -171,9 +177,9 @@ func (v *StructureValidator) validateWithUnipdf(data []byte, result *StructureVa
 					"error": err.Error(),
 				},
 			})
-			return nil
+			return
 		}
-		if strings.Contains(err.Error(), "trailer") {
+		if strings.Contains(errLower, "trailer") {
 			result.Errors = append(result.Errors, ValidationError{
 				Code:    ErrorCodePDFTrailer002,
 				Message: "Invalid trailer dictionary",
@@ -181,7 +187,7 @@ func (v *StructureValidator) validateWithUnipdf(data []byte, result *StructureVa
 					"error": err.Error(),
 				},
 			})
-			return nil
+			return
 		}
 		result.Errors = append(result.Errors, ValidationError{
 			Code:    ErrorCodePDFStructure012,
@@ -190,18 +196,15 @@ func (v *StructureValidator) validateWithUnipdf(data []byte, result *StructureVa
 				"error": err.Error(),
 			},
 		})
-		return nil
+		return
 	}
 
-	v.validateCrossReference(pdfReader, result)
-	v.validateCatalog(pdfReader, result)
-	v.validateObjectNumbering(pdfReader, result)
-
-	return nil
+	v.validateCrossReference(parser, result)
+	v.validateCatalog(parser, result)
+	v.validateObjectNumbering(parser, result)
 }
 
-func (v *StructureValidator) validateCrossReference(pdfReader *model.PdfReader, result *StructureValidationResult) {
-	parser := pdfReader.GetParser()
+func (v *StructureValidator) validateCrossReference(parser *core.PdfParser, result *StructureValidationResult) {
 	if parser == nil {
 		result.Errors = append(result.Errors, ValidationError{
 			Code:    ErrorCodePDFXref001,
@@ -212,7 +215,7 @@ func (v *StructureValidator) validateCrossReference(pdfReader *model.PdfReader, 
 	}
 
 	xrefTable := parser.GetXrefTable()
-	if xrefTable == nil {
+	if xrefTable.ObjectMap == nil {
 		result.Errors = append(result.Errors, ValidationError{
 			Code:    ErrorCodePDFXref001,
 			Message: "Missing cross-reference table",
@@ -221,7 +224,7 @@ func (v *StructureValidator) validateCrossReference(pdfReader *model.PdfReader, 
 		return
 	}
 
-	if xrefTable.ObjectCount() == 0 {
+	if len(xrefTable.ObjectMap) == 0 {
 		result.Errors = append(result.Errors, ValidationError{
 			Code:    ErrorCodePDFXref002,
 			Message: "Empty cross-reference table",
@@ -231,13 +234,9 @@ func (v *StructureValidator) validateCrossReference(pdfReader *model.PdfReader, 
 	}
 
 	offsets := make(map[int64][]int)
-	for _, objNum := range xrefTable.GetObjectNums() {
-		xrefObj, err := xrefTable.Get(objNum)
-		if err != nil {
-			continue
-		}
+	for _, xrefObj := range xrefTable.ObjectMap {
 		if xrefObj.Offset > 0 {
-			offsets[xrefObj.Offset] = append(offsets[xrefObj.Offset], objNum)
+			offsets[xrefObj.Offset] = append(offsets[xrefObj.Offset], xrefObj.ObjectNumber)
 		}
 	}
 
@@ -255,9 +254,23 @@ func (v *StructureValidator) validateCrossReference(pdfReader *model.PdfReader, 
 	}
 }
 
-func (v *StructureValidator) validateCatalog(pdfReader *model.PdfReader, result *StructureValidationResult) {
-	catalog := pdfReader.GetCatalog()
-	if catalog == nil {
+func (v *StructureValidator) validateCatalog(parser *core.PdfParser, result *StructureValidationResult) {
+	if parser == nil {
+		return
+	}
+
+	trailer := parser.GetTrailer()
+	if trailer == nil {
+		result.Errors = append(result.Errors, ValidationError{
+			Code:    ErrorCodePDFCatalog001,
+			Message: "Missing or invalid trailer",
+			Details: map[string]interface{}{},
+		})
+		return
+	}
+
+	rootObj := trailer.Get("Root")
+	if rootObj == nil {
 		result.Errors = append(result.Errors, ValidationError{
 			Code:    ErrorCodePDFCatalog001,
 			Message: "Missing or invalid catalog object",
@@ -266,17 +279,8 @@ func (v *StructureValidator) validateCatalog(pdfReader *model.PdfReader, result 
 		return
 	}
 
-	catalogDict := catalog.ToPdfObject()
-	if catalogDict == nil {
-		result.Errors = append(result.Errors, ValidationError{
-			Code:    ErrorCodePDFCatalog001,
-			Message: "Catalog object is not a dictionary",
-			Details: map[string]interface{}{},
-		})
-		return
-	}
-
-	dict, ok := core.GetDict(catalogDict)
+	catalogObj := core.TraceToDirectObject(rootObj)
+	dict, ok := core.GetDict(catalogObj)
 	if !ok {
 		result.Errors = append(result.Errors, ValidationError{
 			Code:    ErrorCodePDFCatalog001,
@@ -316,12 +320,8 @@ func (v *StructureValidator) validateCatalog(pdfReader *model.PdfReader, result 
 		return
 	}
 
-	pagesIndirect, ok := core.GetIndirect(pagesObj)
-	if ok {
-		pagesObj = pagesIndirect
-	}
-
-	if pagesObj == nil {
+	pagesObj = core.TraceToDirectObject(pagesObj)
+	if _, ok := core.GetDict(pagesObj); !ok {
 		result.Errors = append(result.Errors, ValidationError{
 			Code:    ErrorCodePDFCatalog003,
 			Message: "Catalog /Pages entry is invalid",
@@ -330,25 +330,31 @@ func (v *StructureValidator) validateCatalog(pdfReader *model.PdfReader, result 
 	}
 }
 
-func (v *StructureValidator) validateObjectNumbering(pdfReader *model.PdfReader, result *StructureValidationResult) {
-	parser := pdfReader.GetParser()
+func (v *StructureValidator) validateObjectNumbering(parser *core.PdfParser, result *StructureValidationResult) {
 	if parser == nil {
 		return
 	}
 
 	xrefTable := parser.GetXrefTable()
-	if xrefTable == nil {
+	if xrefTable.ObjectMap == nil {
 		return
 	}
 
 	seenObjects := make(map[string]bool)
-	for _, objNum := range xrefTable.GetObjectNums() {
-		xrefObj, err := xrefTable.Get(objNum)
-		if err != nil {
-			continue
+	for objNum, xrefObj := range xrefTable.ObjectMap {
+		if xrefObj.ObjectNumber != objNum {
+			result.Errors = append(result.Errors, ValidationError{
+				Code:    ErrorCodePDFStructure012,
+				Message: "Cross-reference entry object number mismatch",
+				Details: map[string]interface{}{
+					"object_number": objNum,
+					"xref_number":   xrefObj.ObjectNumber,
+					"generation":    xrefObj.Generation,
+				},
+			})
 		}
 
-		key := fmt.Sprintf("%d_%d", objNum, xrefObj.Generation)
+		key := fmt.Sprintf("%d_%d", xrefObj.ObjectNumber, xrefObj.Generation)
 		if seenObjects[key] {
 			result.Errors = append(result.Errors, ValidationError{
 				Code:    ErrorCodePDFStructure012,

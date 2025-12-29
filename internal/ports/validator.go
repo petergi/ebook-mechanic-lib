@@ -7,6 +7,7 @@ import (
 	"github.com/example/project/internal/domain"
 )
 
+// EPUBValidator validates EPUB files and their components.
 type EPUBValidator interface {
 	ValidateFile(ctx context.Context, filePath string) (*domain.ValidationReport, error)
 	ValidateReader(ctx context.Context, reader io.Reader, size int64) (*domain.ValidationReport, error)
@@ -15,6 +16,7 @@ type EPUBValidator interface {
 	ValidateContent(ctx context.Context, filePath string) (*domain.ValidationReport, error)
 }
 
+// PDFValidator validates PDF files and their components.
 type PDFValidator interface {
 	ValidateFile(ctx context.Context, filePath string) (*domain.ValidationReport, error)
 	ValidateReader(ctx context.Context, reader io.Reader, size int64) (*domain.ValidationReport, error)

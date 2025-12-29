@@ -8,20 +8,19 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/example/project/internal/domain"
 	"github.com/example/project/internal/ports"
-	"golang.org/x/net/html"
 )
 
 const (
 	repairSuffix = "_repaired.epub"
 )
 
+// RepairServiceImpl implements EPUB repair operations.
 type RepairServiceImpl struct {
 	containerValidator *ContainerValidator
 	opfValidator       *OPFValidator
@@ -29,6 +28,7 @@ type RepairServiceImpl struct {
 	contentValidator   *ContentValidator
 }
 
+// NewRepairService returns a repair service for EPUB files.
 func NewRepairService() ports.EPUBRepairService {
 	return &RepairServiceImpl{
 		containerValidator: NewContainerValidator(),
@@ -38,7 +38,8 @@ func NewRepairService() ports.EPUBRepairService {
 	}
 }
 
-func (r *RepairServiceImpl) Preview(ctx context.Context, report *domain.ValidationReport) (*ports.RepairPreview, error) {
+// Preview builds a repair plan from a validation report.
+func (r *RepairServiceImpl) Preview(_ context.Context, report *domain.ValidationReport) (*ports.RepairPreview, error) {
 	if report == nil {
 		return nil, fmt.Errorf("validation report is nil")
 	}
@@ -51,8 +52,8 @@ func (r *RepairServiceImpl) Preview(ctx context.Context, report *domain.Validati
 		Warnings:       make([]string, 0),
 	}
 
-	for _, err := range report.Errors {
-		actions := r.generateRepairActions(&err)
+	for i := range report.Errors {
+		actions := r.generateRepairActions(&report.Errors[i])
 		for _, action := range actions {
 			if !action.Automated {
 				preview.CanAutoRepair = false
@@ -70,11 +71,13 @@ func (r *RepairServiceImpl) Preview(ctx context.Context, report *domain.Validati
 	return preview, nil
 }
 
+// Apply applies repairs and writes the repaired EPUB to a default path.
 func (r *RepairServiceImpl) Apply(ctx context.Context, filePath string, preview *ports.RepairPreview) (*ports.RepairResult, error) {
 	outputPath := r.generateOutputPath(filePath)
 	return r.ApplyWithBackup(ctx, filePath, preview, outputPath)
 }
 
+// ApplyWithBackup applies repairs and writes the repaired EPUB to backupPath.
 func (r *RepairServiceImpl) ApplyWithBackup(ctx context.Context, filePath string, preview *ports.RepairPreview, backupPath string) (*ports.RepairResult, error) {
 	result := &ports.RepairResult{
 		Success:        false,
@@ -87,12 +90,14 @@ func (r *RepairServiceImpl) ApplyWithBackup(ctx context.Context, filePath string
 		return result, nil
 	}
 
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) //nolint:gosec
 	if err != nil {
 		result.Error = fmt.Errorf("failed to open EPUB: %w", err)
 		return result, nil
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
@@ -106,15 +111,19 @@ func (r *RepairServiceImpl) ApplyWithBackup(ctx context.Context, filePath string
 		return result, nil
 	}
 
-	outputFile, err := os.Create(backupPath)
+	outputFile, err := os.Create(backupPath) //nolint:gosec
 	if err != nil {
 		result.Error = fmt.Errorf("failed to create output file: %w", err)
 		return result, nil
 	}
-	defer outputFile.Close()
+	defer func() {
+		_ = outputFile.Close()
+	}()
 
 	zipWriter := zip.NewWriter(outputFile)
-	defer zipWriter.Close()
+	defer func() {
+		_ = zipWriter.Close()
+	}()
 
 	repairContext := &repairContext{
 		actions:   preview.Actions,
@@ -134,7 +143,8 @@ func (r *RepairServiceImpl) ApplyWithBackup(ctx context.Context, filePath string
 	return result, nil
 }
 
-func (r *RepairServiceImpl) CanRepair(ctx context.Context, err *domain.ValidationError) bool {
+// CanRepair reports whether a validation error can be repaired automatically.
+func (r *RepairServiceImpl) CanRepair(_ context.Context, err *domain.ValidationError) bool {
 	if err == nil {
 		return false
 	}
@@ -154,18 +164,23 @@ func (r *RepairServiceImpl) CanRepair(ctx context.Context, err *domain.Validatio
 	}
 }
 
-func (r *RepairServiceImpl) CreateBackup(ctx context.Context, filePath string, backupPath string) error {
-	sourceFile, err := os.Open(filePath)
+// CreateBackup creates a copy of the EPUB at backupPath.
+func (r *RepairServiceImpl) CreateBackup(_ context.Context, filePath string, backupPath string) error {
+	sourceFile, err := os.Open(filePath) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer sourceFile.Close()
+	defer func() {
+		_ = sourceFile.Close()
+	}()
 
-	destFile, err := os.Create(backupPath)
+	destFile, err := os.Create(backupPath) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("failed to create backup file: %w", err)
 	}
-	defer destFile.Close()
+	defer func() {
+		_ = destFile.Close()
+	}()
 
 	_, err = io.Copy(destFile, sourceFile)
 	if err != nil {
@@ -175,10 +190,12 @@ func (r *RepairServiceImpl) CreateBackup(ctx context.Context, filePath string, b
 	return nil
 }
 
+// RestoreBackup restores the original file from backupPath.
 func (r *RepairServiceImpl) RestoreBackup(ctx context.Context, backupPath string, originalPath string) error {
 	return r.CreateBackup(ctx, backupPath, originalPath)
 }
 
+// RepairStructure runs structure-focused repair steps.
 func (r *RepairServiceImpl) RepairStructure(ctx context.Context, filePath string) (*ports.RepairResult, error) {
 	validator := NewEPUBValidator()
 	report, err := validator.ValidateStructure(ctx, filePath)
@@ -194,6 +211,7 @@ func (r *RepairServiceImpl) RepairStructure(ctx context.Context, filePath string
 	return r.Apply(ctx, filePath, preview)
 }
 
+// RepairMetadata runs metadata-focused repair steps.
 func (r *RepairServiceImpl) RepairMetadata(ctx context.Context, filePath string) (*ports.RepairResult, error) {
 	validator := NewEPUBValidator()
 	report, err := validator.ValidateMetadata(ctx, filePath)
@@ -209,6 +227,7 @@ func (r *RepairServiceImpl) RepairMetadata(ctx context.Context, filePath string)
 	return r.Apply(ctx, filePath, preview)
 }
 
+// RepairContent runs content-focused repair steps.
 func (r *RepairServiceImpl) RepairContent(ctx context.Context, filePath string) (*ports.RepairResult, error) {
 	validator := NewEPUBValidator()
 	report, err := validator.ValidateContent(ctx, filePath)
@@ -332,7 +351,7 @@ type repairContext struct {
 	applied   []ports.RepairAction
 }
 
-func (r *RepairServiceImpl) applyRepairs(ctx context.Context, repairCtx *repairContext) error {
+func (r *RepairServiceImpl) applyRepairs(_ context.Context, repairCtx *repairContext) error {
 	actionsByType := make(map[string][]ports.RepairAction)
 	for _, action := range repairCtx.actions {
 		if action.Automated {
@@ -351,9 +370,10 @@ func (r *RepairServiceImpl) applyRepairs(ctx context.Context, repairCtx *repairC
 			return err
 		}
 		filesProcessed["mimetype"] = true
-		for _, action := range append(actionsByType["fix_mimetype_content"], actionsByType["fix_mimetype_order"]...) {
-			repairCtx.applied = append(repairCtx.applied, action)
-		}
+		repairCtx.applied = append(
+			repairCtx.applied,
+			append(actionsByType["fix_mimetype_content"], actionsByType["fix_mimetype_order"]...)...,
+		)
 	}
 
 	contentActions := make(map[string]ports.RepairAction)
@@ -379,9 +399,7 @@ func (r *RepairServiceImpl) applyRepairs(ctx context.Context, repairCtx *repairC
 				return err
 			}
 			filesProcessed[f.Name] = true
-			for _, action := range actionsByType["create_container_xml"] {
-				repairCtx.applied = append(repairCtx.applied, action)
-			}
+			repairCtx.applied = append(repairCtx.applied, actionsByType["create_container_xml"]...)
 			continue
 		}
 
@@ -389,18 +407,17 @@ func (r *RepairServiceImpl) applyRepairs(ctx context.Context, repairCtx *repairC
 		if err != nil {
 			return fmt.Errorf("failed to open file %s: %w", f.Name, err)
 		}
+		defer func() {
+			_ = rc.Close()
+		}()
 
 		data, err := io.ReadAll(rc)
-		rc.Close()
 		if err != nil {
 			return fmt.Errorf("failed to read file %s: %w", f.Name, err)
 		}
 
 		if action, exists := contentActions[f.Name]; exists {
-			data, err = r.addDoctype(data)
-			if err != nil {
-				return fmt.Errorf("failed to add DOCTYPE to %s: %w", f.Name, err)
-			}
+			data = r.addDoctype(data)
 			repairCtx.applied = append(repairCtx.applied, action)
 		}
 
@@ -428,9 +445,7 @@ func (r *RepairServiceImpl) applyRepairs(ctx context.Context, repairCtx *repairC
 		if err := r.writeContainerXML(repairCtx.zipWriter); err != nil {
 			return err
 		}
-		for _, action := range actionsByType["create_container_xml"] {
-			repairCtx.applied = append(repairCtx.applied, action)
-		}
+		repairCtx.applied = append(repairCtx.applied, actionsByType["create_container_xml"]...)
 	}
 
 	return nil
@@ -490,12 +505,12 @@ func (r *RepairServiceImpl) writeContainerXML(zipWriter *zip.Writer) error {
 	return nil
 }
 
-func (r *RepairServiceImpl) addDoctype(data []byte) ([]byte, error) {
+func (r *RepairServiceImpl) addDoctype(data []byte) []byte {
 	content := string(data)
 
 	trimmed := strings.TrimSpace(content)
 	if strings.HasPrefix(strings.ToLower(trimmed), "<!doctype") {
-		return data, nil
+		return data
 	}
 
 	doctype := "<!DOCTYPE html>\n"
@@ -505,11 +520,11 @@ func (r *RepairServiceImpl) addDoctype(data []byte) ([]byte, error) {
 		if xmlDeclEnd != -1 {
 			xmlDecl := trimmed[:xmlDeclEnd+2]
 			rest := strings.TrimLeft(trimmed[xmlDeclEnd+2:], " \t\n\r")
-			return []byte(xmlDecl + "\n" + doctype + rest), nil
+			return []byte(xmlDecl + "\n" + doctype + rest)
 		}
 	}
 
-	return []byte(doctype + content), nil
+	return []byte(doctype + content)
 }
 
 func (r *RepairServiceImpl) repairOPFMetadata(data []byte, actions []ports.RepairAction) ([]byte, error) {
@@ -591,36 +606,4 @@ func (r *RepairServiceImpl) generateOutputPath(filePath string) string {
 	ext := filepath.Ext(filePath)
 	base := strings.TrimSuffix(filePath, ext)
 	return base + repairSuffix
-}
-
-func (r *RepairServiceImpl) fixRelativePaths(href string, basePath string) string {
-	if strings.HasPrefix(href, "http://") || strings.HasPrefix(href, "https://") {
-		return href
-	}
-
-	href = strings.TrimPrefix(href, "/")
-
-	href = strings.ReplaceAll(href, "//", "/")
-
-	if basePath != "" && basePath != "." {
-		return path.Join(basePath, href)
-	}
-
-	return href
-}
-
-func (r *RepairServiceImpl) parseHTML(data []byte) (*html.Node, error) {
-	doc, err := html.Parse(bytes.NewReader(data))
-	if err != nil {
-		return nil, err
-	}
-	return doc, nil
-}
-
-func (r *RepairServiceImpl) renderHTML(node *html.Node) ([]byte, error) {
-	var buf bytes.Buffer
-	if err := html.Render(&buf, node); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
 }

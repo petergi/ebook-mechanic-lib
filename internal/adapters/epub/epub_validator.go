@@ -16,20 +16,23 @@ import (
 	"github.com/example/project/internal/ports"
 )
 
+// EPUB validation error codes.
 const (
 	ErrorCodeEPUBRead           = "EPUB-000"
 	ErrorCodeEPUBMultipleErrors = "EPUB-999"
 )
 
-type EPUBValidatorImpl struct {
+// validatorImpl implements EPUB validation.
+type validatorImpl struct {
 	containerValidator *ContainerValidator
 	opfValidator       *OPFValidator
 	navValidator       *NavValidator
 	contentValidator   *ContentValidator
 }
 
+// NewEPUBValidator returns a new EPUB validator.
 func NewEPUBValidator() ports.EPUBValidator {
-	return &EPUBValidatorImpl{
+	return &validatorImpl{
 		containerValidator: NewContainerValidator(),
 		opfValidator:       NewOPFValidator(),
 		navValidator:       NewNavValidator(),
@@ -37,21 +40,24 @@ func NewEPUBValidator() ports.EPUBValidator {
 	}
 }
 
-func (v *EPUBValidatorImpl) ValidateFile(ctx context.Context, filePath string) (*domain.ValidationReport, error) {
+// ValidateFile validates an EPUB file from disk.
+func (v *validatorImpl) ValidateFile(_ context.Context, filePath string) (*domain.ValidationReport, error) {
 	startTime := time.Now()
 
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to open EPUB file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return nil, fmt.Errorf("failed to stat EPUB file: %w", err)
 	}
 
-	report, err := v.validateEPUB(ctx, file, fileInfo.Size(), filePath)
+	report, err := v.validateEPUB(file, fileInfo.Size(), filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +66,8 @@ func (v *EPUBValidatorImpl) ValidateFile(ctx context.Context, filePath string) (
 	return report, nil
 }
 
-func (v *EPUBValidatorImpl) ValidateReader(ctx context.Context, reader io.Reader, size int64) (*domain.ValidationReport, error) {
+// ValidateReader validates EPUB data from a reader.
+func (v *validatorImpl) ValidateReader(_ context.Context, reader io.Reader, _ int64) (*domain.ValidationReport, error) {
 	startTime := time.Now()
 
 	data, err := io.ReadAll(reader)
@@ -69,7 +76,7 @@ func (v *EPUBValidatorImpl) ValidateReader(ctx context.Context, reader io.Reader
 	}
 
 	readerAt := bytes.NewReader(data)
-	report, err := v.validateEPUB(ctx, readerAt, int64(len(data)), "")
+	report, err := v.validateEPUB(readerAt, int64(len(data)), "")
 	if err != nil {
 		return nil, err
 	}
@@ -78,14 +85,17 @@ func (v *EPUBValidatorImpl) ValidateReader(ctx context.Context, reader io.Reader
 	return report, nil
 }
 
-func (v *EPUBValidatorImpl) ValidateStructure(ctx context.Context, filePath string) (*domain.ValidationReport, error) {
+// ValidateStructure validates container structure only.
+func (v *validatorImpl) ValidateStructure(_ context.Context, filePath string) (*domain.ValidationReport, error) {
 	startTime := time.Now()
 
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to open EPUB file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
@@ -106,14 +116,17 @@ func (v *EPUBValidatorImpl) ValidateStructure(ctx context.Context, filePath stri
 	return report, nil
 }
 
-func (v *EPUBValidatorImpl) ValidateMetadata(ctx context.Context, filePath string) (*domain.ValidationReport, error) {
+// ValidateMetadata validates metadata and OPF structure.
+func (v *validatorImpl) ValidateMetadata(_ context.Context, filePath string) (*domain.ValidationReport, error) {
 	startTime := time.Now()
 
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to open EPUB file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
@@ -157,21 +170,24 @@ func (v *EPUBValidatorImpl) ValidateMetadata(ctx context.Context, filePath strin
 	return report, nil
 }
 
-func (v *EPUBValidatorImpl) ValidateContent(ctx context.Context, filePath string) (*domain.ValidationReport, error) {
+// ValidateContent validates content documents referenced by the OPF.
+func (v *validatorImpl) ValidateContent(_ context.Context, filePath string) (*domain.ValidationReport, error) {
 	startTime := time.Now()
 
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to open EPUB file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return nil, fmt.Errorf("failed to stat EPUB file: %w", err)
 	}
 
-	report, err := v.validateEPUB(ctx, file, fileInfo.Size(), filePath)
+	report, err := v.validateEPUB(file, fileInfo.Size(), filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +196,7 @@ func (v *EPUBValidatorImpl) ValidateContent(ctx context.Context, filePath string
 	return report, nil
 }
 
-func (v *EPUBValidatorImpl) validateEPUB(ctx context.Context, reader io.ReaderAt, size int64, filePath string) (*domain.ValidationReport, error) {
+func (v *validatorImpl) validateEPUB(reader io.ReaderAt, size int64, filePath string) (*domain.ValidationReport, error) {
 	report := v.createReport(filePath)
 
 	containerResult, err := v.containerValidator.Validate(reader, size)
@@ -229,7 +245,7 @@ func (v *EPUBValidatorImpl) validateEPUB(ctx context.Context, reader io.ReaderAt
 	return report, nil
 }
 
-func (v *EPUBValidatorImpl) validateManifestItems(zipReader *zip.Reader, pkg *Package, opfDir string, report *domain.ValidationReport) {
+func (v *validatorImpl) validateManifestItems(zipReader *zip.Reader, pkg *Package, opfDir string, report *domain.ValidationReport) {
 	fileMap := make(map[string]*zip.File)
 	for _, f := range zipReader.File {
 		fileMap[f.Name] = f
@@ -305,20 +321,20 @@ func (v *EPUBValidatorImpl) validateManifestItems(zipReader *zip.Reader, pkg *Pa
 	}
 }
 
-func (v *EPUBValidatorImpl) isContentDocument(mediaType string) bool {
+func (v *validatorImpl) isContentDocument(mediaType string) bool {
 	return mediaType == "application/xhtml+xml" ||
 		strings.HasPrefix(mediaType, "text/html") ||
 		strings.HasPrefix(mediaType, "application/xhtml")
 }
 
-func (v *EPUBValidatorImpl) resolvePath(base, relative string) string {
+func (v *validatorImpl) resolvePath(base, relative string) string {
 	if base == "" || base == "." {
 		return relative
 	}
 	return path.Join(base, relative)
 }
 
-func (v *EPUBValidatorImpl) readFileFromZip(zipReader *zip.Reader, filePath string) ([]byte, error) {
+func (v *validatorImpl) readFileFromZip(zipReader *zip.Reader, filePath string) ([]byte, error) {
 	filePath = strings.TrimPrefix(filePath, "/")
 
 	for _, f := range zipReader.File {
@@ -327,7 +343,9 @@ func (v *EPUBValidatorImpl) readFileFromZip(zipReader *zip.Reader, filePath stri
 			if err != nil {
 				return nil, fmt.Errorf("failed to open file: %w", err)
 			}
-			defer rc.Close()
+			defer func() {
+				_ = rc.Close()
+			}()
 
 			data, err := io.ReadAll(rc)
 			if err != nil {
@@ -340,7 +358,7 @@ func (v *EPUBValidatorImpl) readFileFromZip(zipReader *zip.Reader, filePath stri
 	return nil, fmt.Errorf("file not found: %s", filePath)
 }
 
-func (v *EPUBValidatorImpl) createReport(filePath string) *domain.ValidationReport {
+func (v *validatorImpl) createReport(filePath string) *domain.ValidationReport {
 	return &domain.ValidationReport{
 		FilePath:       filePath,
 		FileType:       "EPUB",
@@ -353,25 +371,25 @@ func (v *EPUBValidatorImpl) createReport(filePath string) *domain.ValidationRepo
 	}
 }
 
-func (v *EPUBValidatorImpl) aggregateContainerErrors(result *ValidationResult, report *domain.ValidationReport) {
+func (v *validatorImpl) aggregateContainerErrors(result *ValidationResult, report *domain.ValidationReport) {
 	for _, err := range result.Errors {
 		v.addError(report, err.Code, err.Message, "mimetype / META-INF/container.xml", err.Details)
 	}
 }
 
-func (v *EPUBValidatorImpl) aggregateOPFErrors(result *OPFValidationResult, opfPath string, report *domain.ValidationReport) {
+func (v *validatorImpl) aggregateOPFErrors(result *OPFValidationResult, opfPath string, report *domain.ValidationReport) {
 	for _, err := range result.Errors {
 		v.addError(report, err.Code, err.Message, opfPath, err.Details)
 	}
 }
 
-func (v *EPUBValidatorImpl) aggregateNavErrors(result *NavValidationResult, navPath string, report *domain.ValidationReport) {
+func (v *validatorImpl) aggregateNavErrors(result *NavValidationResult, navPath string, report *domain.ValidationReport) {
 	for _, err := range result.Errors {
 		v.addError(report, err.Code, err.Message, navPath, err.Details)
 	}
 }
 
-func (v *EPUBValidatorImpl) aggregateContentErrors(result *ContentValidationResult, contentPath string, manifestID string, report *domain.ValidationReport) {
+func (v *validatorImpl) aggregateContentErrors(result *ContentValidationResult, contentPath string, manifestID string, report *domain.ValidationReport) {
 	for _, err := range result.Errors {
 		details := err.Details
 		if details == nil {
@@ -382,7 +400,7 @@ func (v *EPUBValidatorImpl) aggregateContentErrors(result *ContentValidationResu
 	}
 }
 
-func (v *EPUBValidatorImpl) addError(report *domain.ValidationReport, code, message, file string, details map[string]interface{}) {
+func (v *validatorImpl) addError(report *domain.ValidationReport, code, message, file string, details map[string]interface{}) {
 	filename := filepath.Base(file)
 
 	validationError := domain.ValidationError{

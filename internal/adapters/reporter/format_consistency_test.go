@@ -269,7 +269,7 @@ func TestFormatConsistency_MessageContent(t *testing.T) {
 
 	var jsonData map[string]interface{}
 	_ = json.Unmarshal([]byte(jsonResult), &jsonData)
-	
+
 	errors := jsonData["errors"].([]interface{})
 	if len(errors) > 0 {
 		firstError := errors[0].(map[string]interface{})

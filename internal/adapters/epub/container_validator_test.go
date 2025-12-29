@@ -3,41 +3,56 @@ package epub
 import (
 	"archive/zip"
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
-func createValidEPUB(t *testing.T) []byte {
+type epubBuildOptions struct {
+	mimetype      string
+	storeMimetype bool
+	containerXML  *string
+	preMimetype   func(*zip.Writer) error
+}
+
+func buildEPUB(t *testing.T, opts epubBuildOptions) []byte {
 	t.Helper()
-	
+
 	buf := new(bytes.Buffer)
 	zipWriter := zip.NewWriter(buf)
 
-	mimetypeWriter, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:   MimetypeFilename,
-		Method: zip.Store,
-	})
+	if opts.preMimetype != nil {
+		if err := opts.preMimetype(zipWriter); err != nil {
+			t.Fatalf("Failed to create pre-mimetype files: %v", err)
+		}
+	}
+
+	var mimetypeWriter io.Writer
+	var err error
+	if opts.storeMimetype {
+		mimetypeWriter, err = zipWriter.CreateHeader(&zip.FileHeader{
+			Name:   MimetypeFilename,
+			Method: zip.Store,
+		})
+	} else {
+		mimetypeWriter, err = zipWriter.Create(MimetypeFilename)
+	}
 	if err != nil {
 		t.Fatalf("Failed to create mimetype header: %v", err)
 	}
-	if _, err := mimetypeWriter.Write([]byte(ExpectedMimetype)); err != nil {
+	if _, err := mimetypeWriter.Write([]byte(opts.mimetype)); err != nil {
 		t.Fatalf("Failed to write mimetype: %v", err)
 	}
 
-	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
-<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-  <rootfiles>
-    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
-  </rootfiles>
-</container>`
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte(containerXML)); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
+	if opts.containerXML != nil {
+		containerWriter, err := zipWriter.Create(ContainerXMLPath)
+		if err != nil {
+			t.Fatalf("Failed to create container.xml: %v", err)
+		}
+		if _, err := containerWriter.Write([]byte(*opts.containerXML)); err != nil {
+			t.Fatalf("Failed to write container.xml: %v", err)
+		}
 	}
 
 	if err := zipWriter.Close(); err != nil {
@@ -45,6 +60,22 @@ func createValidEPUB(t *testing.T) []byte {
 	}
 
 	return buf.Bytes()
+}
+
+func createValidEPUB(t *testing.T) []byte {
+	t.Helper()
+
+	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+  </rootfiles>
+</container>`
+	return buildEPUB(t, epubBuildOptions{
+		mimetype:      ExpectedMimetype,
+		storeMimetype: true,
+		containerXML:  &containerXML,
+	})
 }
 
 func createEPUBWithInvalidZIP(t *testing.T) []byte {
@@ -54,20 +85,6 @@ func createEPUBWithInvalidZIP(t *testing.T) []byte {
 
 func createEPUBWithWrongMimetypeContent(t *testing.T) []byte {
 	t.Helper()
-	
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	mimetypeWriter, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:   MimetypeFilename,
-		Method: zip.Store,
-	})
-	if err != nil {
-		t.Fatalf("Failed to create mimetype header: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte("application/wrong")); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
 
 	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -75,35 +92,15 @@ func createEPUBWithWrongMimetypeContent(t *testing.T) []byte {
     <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>`
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte(containerXML)); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
+	return buildEPUB(t, epubBuildOptions{
+		mimetype:      "application/wrong",
+		storeMimetype: true,
+		containerXML:  &containerXML,
+	})
 }
 
 func createEPUBWithCompressedMimetype(t *testing.T) []byte {
 	t.Helper()
-	
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	mimetypeWriter, err := zipWriter.Create(MimetypeFilename)
-	if err != nil {
-		t.Fatalf("Failed to create mimetype: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte(ExpectedMimetype)); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
 
 	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -111,46 +108,15 @@ func createEPUBWithCompressedMimetype(t *testing.T) []byte {
     <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>`
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte(containerXML)); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
+	return buildEPUB(t, epubBuildOptions{
+		mimetype:      ExpectedMimetype,
+		storeMimetype: false,
+		containerXML:  &containerXML,
+	})
 }
 
 func createEPUBWithMimetypeNotFirst(t *testing.T) []byte {
 	t.Helper()
-	
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	otherWriter, err := zipWriter.Create("other.txt")
-	if err != nil {
-		t.Fatalf("Failed to create other file: %v", err)
-	}
-	if _, err := otherWriter.Write([]byte("some content")); err != nil {
-		t.Fatalf("Failed to write other file: %v", err)
-	}
-
-	mimetypeWriter, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:   MimetypeFilename,
-		Method: zip.Store,
-	})
-	if err != nil {
-		t.Fatalf("Failed to create mimetype header: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte(ExpectedMimetype)); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
 
 	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -158,132 +124,57 @@ func createEPUBWithMimetypeNotFirst(t *testing.T) []byte {
     <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>`
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte(containerXML)); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
+	return buildEPUB(t, epubBuildOptions{
+		mimetype:      ExpectedMimetype,
+		storeMimetype: true,
+		containerXML:  &containerXML,
+		preMimetype: func(zipWriter *zip.Writer) error {
+			otherWriter, err := zipWriter.Create("other.txt")
+			if err != nil {
+				return err
+			}
+			_, err = otherWriter.Write([]byte("some content"))
+			return err
+		},
+	})
 }
 
 func createEPUBWithoutContainerXML(t *testing.T) []byte {
 	t.Helper()
-	
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	mimetypeWriter, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:   MimetypeFilename,
-		Method: zip.Store,
+	return buildEPUB(t, epubBuildOptions{
+		mimetype:      ExpectedMimetype,
+		storeMimetype: true,
 	})
-	if err != nil {
-		t.Fatalf("Failed to create mimetype header: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte(ExpectedMimetype)); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
 }
 
 func createEPUBWithInvalidContainerXML(t *testing.T) []byte {
 	t.Helper()
-	
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
 
-	mimetypeWriter, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:   MimetypeFilename,
-		Method: zip.Store,
+	containerXML := "This is not valid XML <>"
+	return buildEPUB(t, epubBuildOptions{
+		mimetype:      ExpectedMimetype,
+		storeMimetype: true,
+		containerXML:  &containerXML,
 	})
-	if err != nil {
-		t.Fatalf("Failed to create mimetype header: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte(ExpectedMimetype)); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte("This is not valid XML <>")); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
 }
 
 func createEPUBWithNoRootfiles(t *testing.T) []byte {
 	t.Helper()
-	
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	mimetypeWriter, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:   MimetypeFilename,
-		Method: zip.Store,
-	})
-	if err != nil {
-		t.Fatalf("Failed to create mimetype header: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte(ExpectedMimetype)); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
 
 	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
   <rootfiles>
   </rootfiles>
 </container>`
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte(containerXML)); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
+	return buildEPUB(t, epubBuildOptions{
+		mimetype:      ExpectedMimetype,
+		storeMimetype: true,
+		containerXML:  &containerXML,
+	})
 }
 
 func createEPUBWithEmptyRootfilePath(t *testing.T) []byte {
 	t.Helper()
-	
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	mimetypeWriter, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:   MimetypeFilename,
-		Method: zip.Store,
-	})
-	if err != nil {
-		t.Fatalf("Failed to create mimetype header: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte(ExpectedMimetype)); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
 
 	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -291,38 +182,15 @@ func createEPUBWithEmptyRootfilePath(t *testing.T) []byte {
     <rootfile full-path="" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>`
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte(containerXML)); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
+	return buildEPUB(t, epubBuildOptions{
+		mimetype:      ExpectedMimetype,
+		storeMimetype: true,
+		containerXML:  &containerXML,
+	})
 }
 
 func createEPUBWithMultipleRootfiles(t *testing.T) []byte {
 	t.Helper()
-	
-	buf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(buf)
-
-	mimetypeWriter, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:   MimetypeFilename,
-		Method: zip.Store,
-	})
-	if err != nil {
-		t.Fatalf("Failed to create mimetype header: %v", err)
-	}
-	if _, err := mimetypeWriter.Write([]byte(ExpectedMimetype)); err != nil {
-		t.Fatalf("Failed to write mimetype: %v", err)
-	}
 
 	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -331,20 +199,11 @@ func createEPUBWithMultipleRootfiles(t *testing.T) []byte {
     <rootfile full-path="OEBPS/fallback.opf" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>`
-
-	containerWriter, err := zipWriter.Create(ContainerXMLPath)
-	if err != nil {
-		t.Fatalf("Failed to create container.xml: %v", err)
-	}
-	if _, err := containerWriter.Write([]byte(containerXML)); err != nil {
-		t.Fatalf("Failed to write container.xml: %v", err)
-	}
-
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("Failed to close zip writer: %v", err)
-	}
-
-	return buf.Bytes()
+	return buildEPUB(t, epubBuildOptions{
+		mimetype:      ExpectedMimetype,
+		storeMimetype: true,
+		containerXML:  &containerXML,
+	})
 }
 
 func TestContainerValidator_ValidateBytes_ValidEPUB(t *testing.T) {
@@ -640,7 +499,7 @@ func TestContainerValidator_ValidateFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
 
-	if err := os.WriteFile(tmpFile, epubData, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, epubData, 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 

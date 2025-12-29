@@ -3,7 +3,6 @@ package pdf
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -207,33 +206,33 @@ func TestPreview_TrailerTypos(t *testing.T) {
 
 func TestPreview_UnsafeRepairs(t *testing.T) {
 	tests := []struct {
-		name          string
-		errorCode     string
-		expectedType  string
+		name           string
+		errorCode      string
+		expectedType   string
 		shouldAutomate bool
 	}{
 		{
-			name:          "Invalid Header",
-			errorCode:     ErrorCodePDFHeader001,
-			expectedType:  "manual_header_fix",
+			name:           "Invalid Header",
+			errorCode:      ErrorCodePDFHeader001,
+			expectedType:   "manual_header_fix",
 			shouldAutomate: false,
 		},
 		{
-			name:          "Invalid Version",
-			errorCode:     ErrorCodePDFHeader002,
-			expectedType:  "manual_header_fix",
+			name:           "Invalid Version",
+			errorCode:      ErrorCodePDFHeader002,
+			expectedType:   "manual_header_fix",
 			shouldAutomate: false,
 		},
 		{
-			name:          "Damaged Xref",
-			errorCode:     ErrorCodePDFXref001,
-			expectedType:  "manual_xref_rebuild",
+			name:           "Damaged Xref",
+			errorCode:      ErrorCodePDFXref001,
+			expectedType:   "manual_xref_rebuild",
 			shouldAutomate: false,
 		},
 		{
-			name:          "Missing Catalog",
-			errorCode:     ErrorCodePDFCatalog001,
-			expectedType:  "manual_catalog_fix",
+			name:           "Missing Catalog",
+			errorCode:      ErrorCodePDFCatalog001,
+			expectedType:   "manual_catalog_fix",
 			shouldAutomate: false,
 		},
 	}
@@ -400,7 +399,7 @@ func TestApply_AppendEOFMarker(t *testing.T) {
 	testPDF := filepath.Join(tempDir, "test.pdf")
 
 	pdfContent := createMinimalPDFWithoutEOF()
-	if err := os.WriteFile(testPDF, pdfContent, 0644); err != nil {
+	if err := os.WriteFile(testPDF, pdfContent, 0600); err != nil {
 		t.Fatalf("Failed to create test PDF: %v", err)
 	}
 
@@ -457,7 +456,7 @@ func TestApply_RecomputeStartxref(t *testing.T) {
 	testPDF := filepath.Join(tempDir, "test.pdf")
 
 	pdfContent := createMinimalPDFWithBadStartxref()
-	if err := os.WriteFile(testPDF, pdfContent, 0644); err != nil {
+	if err := os.WriteFile(testPDF, pdfContent, 0600); err != nil {
 		t.Fatalf("Failed to create test PDF: %v", err)
 	}
 
@@ -501,7 +500,7 @@ func TestApply_FixTrailerTypos(t *testing.T) {
 	testPDF := filepath.Join(tempDir, "test.pdf")
 
 	pdfContent := createMinimalPDFWithTrailerTypos()
-	if err := os.WriteFile(testPDF, pdfContent, 0644); err != nil {
+	if err := os.WriteFile(testPDF, pdfContent, 0600); err != nil {
 		t.Fatalf("Failed to create test PDF: %v", err)
 	}
 
@@ -550,7 +549,7 @@ func TestApply_MultipleRepairs(t *testing.T) {
 	testPDF := filepath.Join(tempDir, "test.pdf")
 
 	pdfContent := createMinimalPDFWithMultipleIssues()
-	if err := os.WriteFile(testPDF, pdfContent, 0644); err != nil {
+	if err := os.WriteFile(testPDF, pdfContent, 0600); err != nil {
 		t.Fatalf("Failed to create test PDF: %v", err)
 	}
 
@@ -596,7 +595,7 @@ func TestCreateBackup(t *testing.T) {
 	backupPath := filepath.Join(tempDir, "backup.pdf")
 
 	content := []byte("%PDF-1.7\ntest content\n%%EOF")
-	if err := os.WriteFile(sourcePath, content, 0644); err != nil {
+	if err := os.WriteFile(sourcePath, content, 0600); err != nil {
 		t.Fatalf("Failed to create source file: %v", err)
 	}
 
@@ -604,7 +603,7 @@ func TestCreateBackup(t *testing.T) {
 		t.Fatalf("CreateBackup failed: %v", err)
 	}
 
-	backupContent, err := os.ReadFile(backupPath)
+	backupContent, err := os.ReadFile(backupPath) //nolint:gosec
 	if err != nil {
 		t.Fatalf("Failed to read backup file: %v", err)
 	}
@@ -623,7 +622,7 @@ func TestRestoreBackup(t *testing.T) {
 	originalPath := filepath.Join(tempDir, "original.pdf")
 
 	backupContent := []byte("%PDF-1.7\nbackup content\n%%EOF")
-	if err := os.WriteFile(backupPath, backupContent, 0644); err != nil {
+	if err := os.WriteFile(backupPath, backupContent, 0600); err != nil {
 		t.Fatalf("Failed to create backup file: %v", err)
 	}
 
@@ -631,7 +630,7 @@ func TestRestoreBackup(t *testing.T) {
 		t.Fatalf("RestoreBackup failed: %v", err)
 	}
 
-	restoredContent, err := os.ReadFile(originalPath)
+	restoredContent, err := os.ReadFile(originalPath) //nolint:gosec
 	if err != nil {
 		t.Fatalf("Failed to read restored file: %v", err)
 	}
@@ -701,10 +700,7 @@ func TestAppendEOFMarker(t *testing.T) {
 				data: tt.input,
 			}
 
-			err := service.appendEOFMarker(ctx)
-			if err != nil {
-				t.Fatalf("appendEOFMarker failed: %v", err)
-			}
+			service.appendEOFMarker(ctx)
 
 			if !strings.Contains(string(ctx.data), tt.expected) {
 				t.Errorf("Expected output to contain %q, got %q", tt.expected, string(ctx.data))
@@ -783,10 +779,7 @@ func TestFixTrailerTypos(t *testing.T) {
 				data: []byte(tt.input),
 			}
 
-			err := service.fixTrailerTypos(ctx)
-			if err != nil {
-				t.Fatalf("fixTrailerTypos failed: %v", err)
-			}
+			service.fixTrailerTypos(ctx)
 
 			if !strings.Contains(string(ctx.data), tt.expected) {
 				t.Errorf("Expected output to contain %q, got %q", tt.expected, string(ctx.data))

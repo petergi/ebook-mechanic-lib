@@ -607,7 +607,7 @@ func TestCreateBackup(t *testing.T) {
 	backupPath := filepath.Join(tempDir, "backup.txt")
 
 	content := []byte("test content")
-	if err := os.WriteFile(sourcePath, content, 0644); err != nil {
+	if err := os.WriteFile(sourcePath, content, 0600); err != nil {
 		t.Fatalf("Failed to create source file: %v", err)
 	}
 
@@ -615,7 +615,7 @@ func TestCreateBackup(t *testing.T) {
 		t.Fatalf("CreateBackup failed: %v", err)
 	}
 
-	backupContent, err := os.ReadFile(backupPath)
+	backupContent, err := os.ReadFile(backupPath) //nolint:gosec
 	if err != nil {
 		t.Fatalf("Failed to read backup file: %v", err)
 	}
@@ -634,7 +634,7 @@ func TestRestoreBackup(t *testing.T) {
 	originalPath := filepath.Join(tempDir, "original.txt")
 
 	backupContent := []byte("backup content")
-	if err := os.WriteFile(backupPath, backupContent, 0644); err != nil {
+	if err := os.WriteFile(backupPath, backupContent, 0600); err != nil {
 		t.Fatalf("Failed to create backup file: %v", err)
 	}
 
@@ -642,7 +642,7 @@ func TestRestoreBackup(t *testing.T) {
 		t.Fatalf("RestoreBackup failed: %v", err)
 	}
 
-	restoredContent, err := os.ReadFile(originalPath)
+	restoredContent, err := os.ReadFile(originalPath) //nolint:gosec
 	if err != nil {
 		t.Fatalf("Failed to read restored file: %v", err)
 	}
@@ -679,10 +679,7 @@ func TestAddDoctype(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := service.addDoctype([]byte(tt.input))
-			if err != nil {
-				t.Fatalf("addDoctype failed: %v", err)
-			}
+			result := service.addDoctype([]byte(tt.input))
 
 			if string(result) != tt.expected {
 				t.Errorf("Expected:\n%s\nGot:\n%s", tt.expected, string(result))
@@ -721,14 +718,18 @@ func TestGenerateOutputPath(t *testing.T) {
 }
 
 func createTestEPUBWithBadMimetype(path string) error {
-	f, err := os.Create(path)
+	f, err := os.Create(path) //nolint:gosec
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	zw := zip.NewWriter(f)
-	defer zw.Close()
+	defer func() {
+		_ = zw.Close()
+	}()
 
 	w, err := zw.Create("mimetype")
 	if err != nil {
@@ -755,15 +756,19 @@ func createTestEPUBWithBadMimetype(path string) error {
 	return nil
 }
 
-func createTestEPUBWithoutDoctype(path, contentPath string) error {
-	f, err := os.Create(path)
+func createTestEPUBWithContainer(path string, writeExtra func(*zip.Writer) error) error {
+	f, err := os.Create(path) //nolint:gosec
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	zw := zip.NewWriter(f)
-	defer zw.Close()
+	defer func() {
+		_ = zw.Close()
+	}()
 
 	header := &zip.FileHeader{
 		Name:   "mimetype",
@@ -791,62 +796,35 @@ func createTestEPUBWithoutDoctype(path, contentPath string) error {
 		return err
 	}
 
-	w, err = zw.Create(contentPath)
-	if err != nil {
-		return err
+	if writeExtra == nil {
+		return nil
 	}
-	content := `<html xmlns="http://www.w3.org/1999/xhtml">
+
+	return writeExtra(zw)
+}
+
+func createTestEPUBWithoutDoctype(path, contentPath string) error {
+	return createTestEPUBWithContainer(path, func(zw *zip.Writer) error {
+		w, err := zw.Create(contentPath)
+		if err != nil {
+			return err
+		}
+		content := `<html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>Test</title></head>
 <body><p>Test content</p></body>
 </html>`
-	if _, err := w.Write([]byte(content)); err != nil {
+		_, err = w.Write([]byte(content))
 		return err
-	}
-
-	return nil
+	})
 }
 
 func createTestEPUBWithIncompleteOPF(path, opfPath string) error {
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	zw := zip.NewWriter(f)
-	defer zw.Close()
-
-	header := &zip.FileHeader{
-		Name:   "mimetype",
-		Method: zip.Store,
-	}
-	w, err := zw.CreateHeader(header)
-	if err != nil {
-		return err
-	}
-	if _, err := w.Write([]byte(ExpectedMimetype)); err != nil {
-		return err
-	}
-
-	w, err = zw.Create("META-INF/container.xml")
-	if err != nil {
-		return err
-	}
-	containerXML := `<?xml version="1.0" encoding="UTF-8"?>
-<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-  <rootfiles>
-    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
-  </rootfiles>
-</container>`
-	if _, err := w.Write([]byte(containerXML)); err != nil {
-		return err
-	}
-
-	w, err = zw.Create(opfPath)
-	if err != nil {
-		return err
-	}
-	opfXML := `<?xml version="1.0" encoding="UTF-8"?>
+	return createTestEPUBWithContainer(path, func(zw *zip.Writer) error {
+		w, err := zw.Create(opfPath)
+		if err != nil {
+			return err
+		}
+		opfXML := `<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="bookid" version="3.3">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
     <dc:identifier id="bookid">test-id</dc:identifier>
@@ -858,19 +836,19 @@ func createTestEPUBWithIncompleteOPF(path, opfPath string) error {
     <itemref idref="nav"/>
   </spine>
 </package>`
-	if _, err := w.Write([]byte(opfXML)); err != nil {
+		_, err = w.Write([]byte(opfXML))
 		return err
-	}
-
-	return nil
+	})
 }
 
 func verifyMimetypeInEPUB(path string) error {
-	f, err := os.Open(path)
+	f, err := os.Open(path) //nolint:gosec
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	fi, err := f.Stat()
 	if err != nil {
@@ -899,7 +877,9 @@ func verifyMimetypeInEPUB(path string) error {
 	if err != nil {
 		return err
 	}
-	defer rc.Close()
+	defer func() {
+		_ = rc.Close()
+	}()
 
 	content, err := io.ReadAll(rc)
 	if err != nil {
@@ -914,11 +894,13 @@ func verifyMimetypeInEPUB(path string) error {
 }
 
 func readFileFromEPUB(epubPath, filePath string) ([]byte, error) {
-	f, err := os.Open(epubPath)
+	f, err := os.Open(epubPath) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	fi, err := f.Stat()
 	if err != nil {
@@ -936,7 +918,9 @@ func readFileFromEPUB(epubPath, filePath string) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			defer rc.Close()
+			defer func() {
+				_ = rc.Close()
+			}()
 
 			return io.ReadAll(rc)
 		}

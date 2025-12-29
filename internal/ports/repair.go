@@ -1,3 +1,4 @@
+// Package ports defines interfaces for adapters and services.
 package ports
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/example/project/internal/domain"
 )
 
+// RepairAction describes a single repair step.
 type RepairAction struct {
 	Type        string
 	Description string
@@ -15,22 +17,25 @@ type RepairAction struct {
 	Automated   bool
 }
 
+// RepairPreview summarizes candidate repairs and constraints.
 type RepairPreview struct {
-	Actions       []RepairAction
-	CanAutoRepair bool
-	EstimatedTime int64
+	Actions        []RepairAction
+	CanAutoRepair  bool
+	EstimatedTime  int64
 	BackupRequired bool
-	Warnings      []string
+	Warnings       []string
 }
 
+// RepairResult captures applied repairs and resulting report.
 type RepairResult struct {
-	Success       bool
+	Success        bool
 	ActionsApplied []RepairAction
-	Report        *domain.ValidationReport
-	BackupPath    string
-	Error         error
+	Report         *domain.ValidationReport
+	BackupPath     string
+	Error          error
 }
 
+// RepairService defines the generic repair workflow.
 type RepairService interface {
 	Preview(ctx context.Context, report *domain.ValidationReport) (*RepairPreview, error)
 	Apply(ctx context.Context, filePath string, preview *RepairPreview) (*RepairResult, error)
@@ -40,6 +45,7 @@ type RepairService interface {
 	RestoreBackup(ctx context.Context, backupPath string, originalPath string) error
 }
 
+// EPUBRepairService specializes repairs for EPUB files.
 type EPUBRepairService interface {
 	RepairService
 	RepairStructure(ctx context.Context, filePath string) (*RepairResult, error)
@@ -47,6 +53,7 @@ type EPUBRepairService interface {
 	RepairContent(ctx context.Context, filePath string) (*RepairResult, error)
 }
 
+// PDFRepairService specializes repairs for PDF files.
 type PDFRepairService interface {
 	RepairService
 	RepairStructure(ctx context.Context, filePath string) (*RepairResult, error)

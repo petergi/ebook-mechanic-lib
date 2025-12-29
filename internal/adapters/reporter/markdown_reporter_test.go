@@ -204,7 +204,7 @@ func TestMarkdownReporter_WriteToFile(t *testing.T) {
 		t.Fatalf("WriteToFile failed: %v", err)
 	}
 
-	data, err := os.ReadFile(outputPath)
+	data, err := os.ReadFile(outputPath) //nolint:gosec
 	if err != nil {
 		t.Fatalf("Failed to read file: %v", err)
 	}
@@ -352,7 +352,7 @@ func TestMarkdownReporter_EscapeMarkdown(t *testing.T) {
 
 func TestMarkdownReporter_WithFilter(t *testing.T) {
 	ctx := context.Background()
-	
+
 	filter := &Filter{
 		Categories: []string{"structure"},
 	}

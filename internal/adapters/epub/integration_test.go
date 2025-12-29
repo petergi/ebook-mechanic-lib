@@ -22,12 +22,12 @@ func TestContainerValidator_Integration(t *testing.T) {
 	}{
 		{
 			name:        "Valid EPUB fixture",
-			fixtureFile: "valid.epub",
+			fixtureFile: "valid/minimal.epub",
 			expectValid: true,
 		},
 		{
 			name:        "Invalid EPUB fixture",
-			fixtureFile: "invalid.epub",
+			fixtureFile: "invalid/not_zip.epub",
 			expectValid: false,
 		},
 	}

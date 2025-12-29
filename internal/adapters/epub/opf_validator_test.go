@@ -60,11 +60,11 @@ func TestOPFValidator_ValidateBytes_MinimalValid(t *testing.T) {
 
 func TestOPFValidator_ValidateBytes(t *testing.T) {
 	tests := []struct {
-		name          string
-		opfContent    string
-		expectValid   bool
-		expectedCode  string
-		checkError    func(*testing.T, []ValidationError)
+		name         string
+		opfContent   string
+		expectValid  bool
+		expectedCode string
+		checkError   func(*testing.T, []ValidationError)
 	}{
 		{
 			name: "invalid XML",
@@ -481,7 +481,7 @@ func TestOPFValidator_ValidateFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "content.opf")
 
-	if err := os.WriteFile(tmpFile, []byte(opfData), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, []byte(opfData), 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -554,7 +554,7 @@ func TestOPFValidator_ValidateFromEPUB(t *testing.T) {
 
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
-	if err := os.WriteFile(tmpFile, buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, buf.Bytes(), 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 
@@ -591,7 +591,7 @@ func TestOPFValidator_ValidateFromEPUB_MissingOPF(t *testing.T) {
 
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "test.epub")
-	if err := os.WriteFile(tmpFile, buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, buf.Bytes(), 0600); err != nil {
 		t.Fatalf("Failed to write temp file: %v", err)
 	}
 

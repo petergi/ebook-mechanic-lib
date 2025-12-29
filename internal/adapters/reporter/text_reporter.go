@@ -11,21 +11,25 @@ import (
 	"github.com/example/project/internal/ports"
 )
 
+// TextReporter formats validation reports as styled plain text.
 type TextReporter struct {
 	filter *Filter
 }
 
+// NewTextReporter returns a text reporter without filters.
 func NewTextReporter() ports.Reporter {
 	return &TextReporter{}
 }
 
+// NewTextReporterWithFilter returns a text reporter with a filter applied.
 func NewTextReporterWithFilter(filter *Filter) ports.Reporter {
 	return &TextReporter{
 		filter: filter,
 	}
 }
 
-func (r *TextReporter) Format(ctx context.Context, report *domain.ValidationReport, options *ports.ReportOptions) (string, error) {
+// Format renders a single report as text.
+func (r *TextReporter) Format(_ context.Context, report *domain.ValidationReport, options *ports.ReportOptions) (string, error) {
 	var sb strings.Builder
 
 	colors := NewColorScheme(options != nil && options.ColorEnabled)
@@ -110,6 +114,7 @@ func (r *TextReporter) Format(ctx context.Context, report *domain.ValidationRepo
 	return sb.String(), nil
 }
 
+// Write writes a text report to the provided writer.
 func (r *TextReporter) Write(ctx context.Context, report *domain.ValidationReport, writer io.Writer, options *ports.ReportOptions) error {
 	formatted, err := r.Format(ctx, report, options)
 	if err != nil {
@@ -120,8 +125,9 @@ func (r *TextReporter) Write(ctx context.Context, report *domain.ValidationRepor
 	return err
 }
 
+// WriteToFile writes a text report to a file.
 func (r *TextReporter) WriteToFile(ctx context.Context, report *domain.ValidationReport, filePath string, options *ports.ReportOptions) error {
-	file, err := os.Create(filePath)
+	file, err := os.Create(filePath) //nolint:gosec
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
@@ -132,6 +138,7 @@ func (r *TextReporter) WriteToFile(ctx context.Context, report *domain.Validatio
 	return r.Write(ctx, report, file, options)
 }
 
+// FormatMultiple renders multiple reports as text.
 func (r *TextReporter) FormatMultiple(ctx context.Context, reports []*domain.ValidationReport, options *ports.ReportOptions) (string, error) {
 	var sb strings.Builder
 
@@ -174,7 +181,7 @@ func (r *TextReporter) FormatMultiple(ctx context.Context, reports []*domain.Val
 			return "", err
 		}
 		sb.WriteString(reportStr)
-		
+
 		if i < len(reports)-1 {
 			sb.WriteString("\n")
 		}
@@ -183,6 +190,7 @@ func (r *TextReporter) FormatMultiple(ctx context.Context, reports []*domain.Val
 	return sb.String(), nil
 }
 
+// WriteMultiple writes multiple text reports to the provided writer.
 func (r *TextReporter) WriteMultiple(ctx context.Context, reports []*domain.ValidationReport, writer io.Writer, options *ports.ReportOptions) error {
 	formatted, err := r.FormatMultiple(ctx, reports, options)
 	if err != nil {
@@ -193,7 +201,8 @@ func (r *TextReporter) WriteMultiple(ctx context.Context, reports []*domain.Vali
 	return err
 }
 
-func (r *TextReporter) WriteSummary(ctx context.Context, reports []*domain.ValidationReport, writer io.Writer, options *ports.ReportOptions) error {
+// WriteSummary writes a text summary for multiple reports.
+func (r *TextReporter) WriteSummary(_ context.Context, reports []*domain.ValidationReport, writer io.Writer, options *ports.ReportOptions) error {
 	var sb strings.Builder
 
 	colors := NewColorScheme(options != nil && options.ColorEnabled)
@@ -235,7 +244,7 @@ func (r *TextReporter) WriteSummary(ctx context.Context, reports []*domain.Valid
 		if !report.IsValid {
 			status = colors.ColorizeError("✗")
 		}
-		
+
 		sb.WriteString(fmt.Sprintf("%s %s\n", status, colors.ColorizePath(report.FilePath)))
 		sb.WriteString(fmt.Sprintf("    Errors: %s, Warnings: %s, Info: %s\n",
 			colors.ColorizeError(fmt.Sprintf("%d", report.ErrorCount())),
@@ -252,25 +261,25 @@ func (r *TextReporter) WriteSummary(ctx context.Context, reports []*domain.Valid
 func (r *TextReporter) writeErrors(sb *strings.Builder, errors []domain.ValidationError, colors *ColorScheme, options *ports.ReportOptions) {
 	for i, err := range errors {
 		severitySymbol := r.getSeveritySymbol(err.Severity)
-		sb.WriteString(fmt.Sprintf("\n[%d] %s %s %s\n",
+		fmt.Fprintf(sb, "\n[%d] %s %s %s\n",
 			i+1,
 			colors.ColorizeForSeverity(severitySymbol, err.Severity),
 			colors.ColorizeCode(fmt.Sprintf("[%s]", err.Code)),
-			err.Message))
+			err.Message)
 
 		if err.Location != nil {
 			locationStr := r.formatLocation(err.Location)
-			sb.WriteString(fmt.Sprintf("    Location: %s\n", colors.ColorizePath(locationStr)))
+			fmt.Fprintf(sb, "    Location: %s\n", colors.ColorizePath(locationStr))
 		}
 
 		if options != nil && options.Verbose {
 			if len(err.Details) > 0 {
 				sb.WriteString("    Details:\n")
 				for key, value := range err.Details {
-					sb.WriteString(fmt.Sprintf("      %s: %v\n", key, value))
+					fmt.Fprintf(sb, "      %s: %v\n", key, value)
 				}
 			}
-			sb.WriteString(fmt.Sprintf("    Timestamp: %s\n", colors.ColorizeDim(err.Timestamp.Format("2006-01-02 15:04:05"))))
+			fmt.Fprintf(sb, "    Timestamp: %s\n", colors.ColorizeDim(err.Timestamp.Format("2006-01-02 15:04:05")))
 		}
 	}
 }

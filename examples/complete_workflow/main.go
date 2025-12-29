@@ -1,3 +1,4 @@
+// Package main provides an example program for EBMLib.
 package main
 
 import (

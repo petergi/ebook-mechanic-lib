@@ -2,13 +2,15 @@ package reporter
 
 import "github.com/example/project/internal/domain"
 
+// Filter defines criteria for selecting validation errors.
 type Filter struct {
-	Severities []domain.Severity
-	Categories []string
-	Standards  []string
+	Severities  []domain.Severity
+	Categories  []string
+	Standards   []string
 	MinSeverity domain.Severity
 }
 
+// NewFilter returns a filter with empty criteria.
 func NewFilter() *Filter {
 	return &Filter{
 		Severities: make([]domain.Severity, 0),
@@ -17,6 +19,7 @@ func NewFilter() *Filter {
 	}
 }
 
+// Matches reports whether the error satisfies the filter criteria.
 func (f *Filter) Matches(err domain.ValidationError) bool {
 	if len(f.Severities) > 0 {
 		found := false
@@ -93,6 +96,7 @@ func (f *Filter) meetsMinSeverity(severity domain.Severity) bool {
 	return currentLevel >= minLevel
 }
 
+// FilterErrors returns errors that match the filter criteria.
 func (f *Filter) FilterErrors(errors []domain.ValidationError) []domain.ValidationError {
 	if f == nil {
 		return errors
@@ -107,6 +111,7 @@ func (f *Filter) FilterErrors(errors []domain.ValidationError) []domain.Validati
 	return filtered
 }
 
+// FilterReportBySeverity returns a report filtered by the provided severities.
 func FilterReportBySeverity(report *domain.ValidationReport, severities []domain.Severity) *domain.ValidationReport {
 	filtered := &domain.ValidationReport{
 		FilePath:       report.FilePath,

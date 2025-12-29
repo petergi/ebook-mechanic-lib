@@ -1,6 +1,8 @@
+// Package main provides an example program for EBMLib.
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -65,12 +67,15 @@ func demonstrateJSONReport(report *ebmlib.ValidationReport) {
 	if err != nil {
 		log.Printf("Error writing JSON file: %v", err)
 	} else {
-		fmt.Println("Full JSON report written to: validation_report.json\n")
+		fmt.Println("Full JSON report written to: validation_report.json")
+		fmt.Println()
 	}
 }
 
 func demonstrateTextReport(report *ebmlib.ValidationReport) {
 	fmt.Println("=== Text Report (with colors) ===")
+
+	ctx := context.Background()
 
 	options := &ebmlib.ReportOptions{
 		Format:          ebmlib.FormatText,
@@ -80,7 +85,7 @@ func demonstrateTextReport(report *ebmlib.ValidationReport) {
 		ColorEnabled:    true,
 	}
 
-	textOutput, err := ebmlib.FormatReportWithOptions(nil, report, options)
+	textOutput, err := ebmlib.FormatReportWithOptions(ctx, report, options)
 	if err != nil {
 		log.Printf("Error formatting text: %v", err)
 		return
@@ -100,12 +105,16 @@ func demonstrateTextReport(report *ebmlib.ValidationReport) {
 	if err != nil {
 		log.Printf("Error writing text file: %v", err)
 	} else {
-		fmt.Println("\nText report (without colors) written to: validation_report.txt\n")
+		fmt.Println()
+		fmt.Println("Text report (without colors) written to: validation_report.txt")
+		fmt.Println()
 	}
 }
 
 func demonstrateMarkdownReport(report *ebmlib.ValidationReport) {
 	fmt.Println("=== Markdown Report ===")
+
+	ctx := context.Background()
 
 	options := &ebmlib.ReportOptions{
 		Format:          ebmlib.FormatMarkdown,
@@ -114,7 +123,7 @@ func demonstrateMarkdownReport(report *ebmlib.ValidationReport) {
 		Verbose:         true,
 	}
 
-	mdOutput, err := ebmlib.FormatReportWithOptions(nil, report, options)
+	mdOutput, err := ebmlib.FormatReportWithOptions(ctx, report, options)
 	if err != nil {
 		log.Printf("Error formatting Markdown: %v", err)
 		return
@@ -130,12 +139,16 @@ func demonstrateMarkdownReport(report *ebmlib.ValidationReport) {
 	if err != nil {
 		log.Printf("Error writing Markdown file: %v", err)
 	} else {
-		fmt.Println("Markdown report written to: validation_report.md\n")
+		fmt.Println("Markdown report written to: validation_report.md")
+		fmt.Println()
 	}
 }
 
 func demonstrateCustomOptions(report *ebmlib.ValidationReport) {
-	fmt.Println("=== Custom Options Examples ===\n")
+	fmt.Println("=== Custom Options Examples ===")
+	fmt.Println()
+
+	ctx := context.Background()
 
 	fmt.Println("1. Errors only (no warnings/info):")
 	options1 := &ebmlib.ReportOptions{
@@ -145,7 +158,7 @@ func demonstrateCustomOptions(report *ebmlib.ValidationReport) {
 		Verbose:         false,
 		ColorEnabled:    false,
 	}
-	output1, err := ebmlib.FormatReportWithOptions(nil, report, options1)
+	output1, err := ebmlib.FormatReportWithOptions(ctx, report, options1)
 	if err != nil {
 		log.Printf("Error: %v", err)
 	} else {
@@ -153,7 +166,8 @@ func demonstrateCustomOptions(report *ebmlib.ValidationReport) {
 		fmt.Printf("   Output: %d lines (errors only)\n", lines)
 	}
 
-	fmt.Println("\n2. Limited errors (max 5):")
+	fmt.Println()
+	fmt.Println("2. Limited errors (max 5):")
 	options2 := &ebmlib.ReportOptions{
 		Format:          ebmlib.FormatText,
 		IncludeWarnings: true,
@@ -162,7 +176,7 @@ func demonstrateCustomOptions(report *ebmlib.ValidationReport) {
 		Verbose:         false,
 		ColorEnabled:    false,
 	}
-	output2, err := ebmlib.FormatReportWithOptions(nil, report, options2)
+	output2, err := ebmlib.FormatReportWithOptions(ctx, report, options2)
 	if err != nil {
 		log.Printf("Error: %v", err)
 	} else {
@@ -170,7 +184,8 @@ func demonstrateCustomOptions(report *ebmlib.ValidationReport) {
 		fmt.Printf("   Output: %d lines (max 5 errors)\n", lines)
 	}
 
-	fmt.Println("\n3. Compact format (non-verbose):")
+	fmt.Println()
+	fmt.Println("3. Compact format (non-verbose):")
 	options3 := &ebmlib.ReportOptions{
 		Format:          ebmlib.FormatText,
 		IncludeWarnings: true,
@@ -178,7 +193,7 @@ func demonstrateCustomOptions(report *ebmlib.ValidationReport) {
 		Verbose:         false,
 		ColorEnabled:    false,
 	}
-	output3, err := ebmlib.FormatReportWithOptions(nil, report, options3)
+	output3, err := ebmlib.FormatReportWithOptions(ctx, report, options3)
 	if err != nil {
 		log.Printf("Error: %v", err)
 	} else {
@@ -186,14 +201,15 @@ func demonstrateCustomOptions(report *ebmlib.ValidationReport) {
 		fmt.Printf("   Output: %d lines (compact)\n", lines)
 	}
 
-	fmt.Println("\n4. Verbose format with all details:")
+	fmt.Println()
+	fmt.Println("4. Verbose format with all details:")
 	options4 := &ebmlib.ReportOptions{
 		Format:          ebmlib.FormatJSON,
 		IncludeWarnings: true,
 		IncludeInfo:     true,
 		Verbose:         true,
 	}
-	output4, err := ebmlib.FormatReportWithOptions(nil, report, options4)
+	output4, err := ebmlib.FormatReportWithOptions(ctx, report, options4)
 	if err != nil {
 		log.Printf("Error: %v", err)
 	} else {
