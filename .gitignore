@@ -76,3 +76,13 @@ tmp/
 
 # Test fixtures (exclude generated EPUB files from version control)
 testdata/epub/*.epub
+
+# Example output files
+examples/*.json
+examples/*.txt
+examples/*.md
+examples/report.*
+examples/validation_report.*
+examples/summary.*
+examples/*_repaired.epub
+examples/*_repaired.pdf
