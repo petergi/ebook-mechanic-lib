@@ -12,7 +12,7 @@ func main() {
 }
 
 func demonstrateAccessibilityValidation() {
-	fmt.Println("=== EPUB Accessibility Validation Demo ===\n")
+	fmt.Println("=== EPUB Accessibility Validation Demo ===")
 
 	validator := epub.NewAccessibilityValidator()
 
