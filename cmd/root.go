@@ -54,6 +54,7 @@ func newRootCmd() *cobra.Command {
 	cmd.AddCommand(newValidateCmd(flags))
 	cmd.AddCommand(newRepairCmd(flags))
 	cmd.AddCommand(newBatchCmd(flags))
+	cmd.AddCommand(newExamplesCmd())
 
 	cmd.SetOut(os.Stdout)
 	cmd.SetErr(os.Stderr)
