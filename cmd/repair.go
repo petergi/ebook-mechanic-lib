@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -87,6 +88,16 @@ func newRepairCmd(root *rootFlags) *cobra.Command {
 					}
 					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Verified: %s marker present\n", "%%EOF")
 				}
+
+				if report != nil && !report.IsValid {
+					warnings := manualRepairWarnings(result)
+					if len(warnings) > 0 {
+						_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Manual repair required:")
+						for _, warning := range warnings {
+							_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  - %s\n", warning)
+						}
+					}
+				}
 			}
 
 			if reportErr != nil {
@@ -133,4 +144,29 @@ func verifyEOFMarker(path string) error {
 		return fmt.Errorf("missing %%EOF marker in repaired output")
 	}
 	return nil
+}
+
+func manualRepairWarnings(result *ports.RepairResult) []string {
+	if result == nil {
+		return nil
+	}
+	unique := make(map[string]struct{})
+	for _, action := range result.ActionsApplied {
+		if action.Automated {
+			continue
+		}
+		if action.Description == "" {
+			continue
+		}
+		unique[action.Description] = struct{}{}
+	}
+	if len(unique) == 0 {
+		return nil
+	}
+	warnings := make([]string, 0, len(unique))
+	for warning := range unique {
+		warnings = append(warnings, warning)
+	}
+	sort.Strings(warnings)
+	return warnings
 }
