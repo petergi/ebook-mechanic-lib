@@ -193,7 +193,7 @@ docs: docs-links docs-lint docs-spell ## Validate documentation
 .PHONY: docs-links
 docs-links: ## Validate local markdown links
 	@echo "$(BOLD)$(BLUE)Checking markdown links...$(RESET)"
-	@python - <<'PY'\nfrom pathlib import Path\nimport re\n\nroot = Path('.')\nmd_files = [p for p in root.rglob('*.md')]\nlink_re = re.compile(r'\\[[^\\]]*\\]\\(([^)]+)\\)')\n\nmissing = []\nfor md in md_files:\n    text = md.read_text(encoding='utf-8')\n    for link in link_re.findall(text):\n        if link.startswith(('http://','https://','mailto:')):\n            continue\n        if link.startswith('#'):\n            continue\n        link_path = link.split('#',1)[0].strip()\n        if not link_path:\n            continue\n        if link_path.startswith('data:'):\n            continue\n        target = (md.parent / link_path).resolve()\n        if not target.exists():\n            missing.append((md, link))\n\nif missing:\n    print('Missing links:')\n    for md, link in missing:\n        print(f'- {md}: {link}')\n    raise SystemExit(1)\n\nprint('All local markdown links resolve.')\nPY
+	@python3 scripts/check-docs-links.py
 
 .PHONY: docs-lint
 docs-lint: ## Lint markdown files (requires markdownlint-cli2)
