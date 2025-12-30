@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/example/project/internal/cli"
+	"github.com/example/project/internal/ports"
 )
 
 type repairFlags struct {
@@ -57,14 +60,17 @@ func newRepairCmd(root *rootFlags) *cobra.Command {
 			}
 
 			if result != nil {
-				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Repaired: %v\n", result.Success)
+				outputPath := ""
 				if flags.inPlace {
-					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Output: %s\n", args[0])
+					outputPath = args[0]
 				} else if flags.output != "" {
-					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Output: %s\n", flags.output)
+					outputPath = flags.output
 				} else {
-					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Output: %s\n", cli.DefaultRepairedPath(args[0]))
+					outputPath = cli.DefaultRepairedPath(args[0])
 				}
+
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Repaired: %v\n", result.Success)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Output: %s\n", outputPath)
 				if flags.backup && result.BackupPath != "" {
 					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Backup: %s\n", result.BackupPath)
 				}
@@ -73,6 +79,13 @@ func newRepairCmd(root *rootFlags) *cobra.Command {
 					for _, action := range result.ActionsApplied {
 						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  - %s\n", action.Description)
 					}
+				}
+
+				if outputPath != "" && appliedAction(result, "append_eof_marker") {
+					if err := verifyEOFMarker(outputPath); err != nil {
+						return err
+					}
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Verified: %s marker present\n", "%%EOF")
 				}
 			}
 
@@ -90,4 +103,34 @@ func newRepairCmd(root *rootFlags) *cobra.Command {
 	cmd.Flags().StringVar(&flags.backupDir, "backup-dir", "", "Directory to place backups")
 
 	return cmd
+}
+
+func appliedAction(result *ports.RepairResult, actionType string) bool {
+	if result == nil {
+		return false
+	}
+	for _, action := range result.ActionsApplied {
+		if action.Type == actionType {
+			return true
+		}
+	}
+	return false
+}
+
+func verifyEOFMarker(path string) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("read repaired output: %w", err)
+	}
+	if len(data) == 0 {
+		return fmt.Errorf("repaired output is empty")
+	}
+	last := data
+	if len(data) > 1024 {
+		last = data[len(data)-1024:]
+	}
+	if !bytes.Contains(last, []byte("%%EOF")) {
+		return fmt.Errorf("missing %%EOF marker in repaired output")
+	}
+	return nil
 }
