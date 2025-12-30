@@ -200,9 +200,9 @@ docs-lint: ## Lint markdown files (requires markdownlint-cli2)
 	@echo "$(BOLD)$(BLUE)Linting markdown...$(RESET)"
 	@if command -v markdownlint-cli2 > /dev/null 2>&1; then \
 		markdownlint-cli2 \"**/*.md\" --config .markdownlint.yaml; \
-		echo \"$(BOLD)$(GREEN)✓ Markdown lint complete$(RESET)\"; \
+		printf "%b\n" "$(BOLD)$(GREEN)✓ Markdown lint complete$(RESET)"; \
 	else \
-		echo \"$(BOLD)$(RED)✗ markdownlint-cli2 not installed. Install with: npm i -g markdownlint-cli2$(RESET)\"; \
+		printf "%b\n" "$(BOLD)$(RED)✗ markdownlint-cli2 not installed. Install with: npm i -g markdownlint-cli2$(RESET)"; \
 		exit 1; \
 	fi
 
@@ -211,9 +211,9 @@ docs-spell: ## Spellcheck docs (requires codespell)
 	@echo "$(BOLD)$(BLUE)Spellchecking docs...$(RESET)"
 	@if command -v codespell > /dev/null 2>&1; then \
 		codespell --config .codespellrc .; \
-		echo \"$(BOLD)$(GREEN)✓ Spellcheck complete$(RESET)\"; \
+		printf "%b\n" "$(BOLD)$(GREEN)✓ Spellcheck complete$(RESET)"; \
 	else \
-		echo \"$(BOLD)$(RED)✗ codespell not installed. Install with: pip install codespell$(RESET)\"; \
+		printf "%b\n" "$(BOLD)$(RED)✗ codespell not installed. Install with: pip install codespell$(RESET)"; \
 		exit 1; \
 	fi
 
