@@ -65,7 +65,7 @@ func newRepairCmd(root *rootFlags) *cobra.Command {
 				} else {
 					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Output: %s\n", cli.DefaultRepairedPath(args[0]))
 				}
-				if result.BackupPath != "" {
+				if flags.backup && result.BackupPath != "" {
 					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Backup: %s\n", result.BackupPath)
 				}
 				if len(result.ActionsApplied) > 0 {
