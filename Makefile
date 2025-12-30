@@ -213,8 +213,7 @@ docs-spell: ## Spellcheck docs (requires codespell)
 		codespell --config .codespellrc .; \
 		printf "%b\n" "$(BOLD)$(GREEN)✓ Spellcheck complete$(RESET)"; \
 	else \
-		printf "%b\n" "$(BOLD)$(RED)✗ codespell not installed. Install with: pip install codespell$(RESET)"; \
-		exit 1; \
+		printf "%b\n" "$(BOLD)$(YELLOW)! codespell not installed. Install with: pip install codespell$(RESET)"; \
 	fi
 
 # Wiki Operations
