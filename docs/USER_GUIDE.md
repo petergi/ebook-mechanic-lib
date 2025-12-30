@@ -573,6 +573,7 @@ The following require manual intervention or specialized tools:
 - **Default output**: writes `<file>.repaired.<ext>` (leaves original untouched)
 - **In-place**: `--in-place` replaces the original file
 - **Backup**: `--backup` keeps a copy of the original (optionally `--backup-dir`)
+- **Repaired status**: CLI reports `Repaired: true` only when the post-repair validation is clean
 
 ### Repair Safety Levels
 

@@ -254,6 +254,11 @@ func RepairFile(ctx context.Context, path string, opts RepairOptions) (*ports.Re
 		return result, report, err
 	}
 
+	result.Report = finalReport
+	if !finalReport.IsValid {
+		result.Success = false
+	}
+
 	return result, finalReport, nil
 }
 

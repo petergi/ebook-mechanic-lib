@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -118,6 +119,7 @@ func withSignalContext(parent context.Context) (context.Context, context.CancelF
 
 func Execute() {
 	cmd := newRootCmd()
+	normalizeArgs(cmd, os.Args[1:])
 	if err := cmd.Execute(); err != nil {
 		var exitErr cli.ExitError
 		if errors.As(err, &exitErr) {
@@ -129,4 +131,39 @@ func Execute() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(cli.ExitCodeInternal)
 	}
+}
+
+func normalizeArgs(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		return
+	}
+
+	subcommands := map[string]struct{}{
+		"validate":   {},
+		"repair":     {},
+		"batch":      {},
+		"examples":   {},
+		"help":       {},
+		"completion": {},
+	}
+
+	index := -1
+	for i, arg := range args {
+		if arg == "-" || !strings.HasPrefix(arg, "-") {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return
+	}
+	if _, ok := subcommands[args[index]]; ok {
+		return
+	}
+
+	normalized := make([]string, 0, len(args)+1)
+	normalized = append(normalized, args[:index]...)
+	normalized = append(normalized, "validate")
+	normalized = append(normalized, args[index:]...)
+	cmd.SetArgs(normalized)
 }
