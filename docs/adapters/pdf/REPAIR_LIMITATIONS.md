@@ -72,7 +72,33 @@ After:  trailer << /Size 10 /Root 1 0 R >>
 
 The following repairs are considered **unsafe** and require manual intervention using specialized PDF repair tools:
 
-### 1. Font Embedding and Subsetting
+### 1. Missing or Corrupt PDF Header
+
+**Error Codes:** PDF-HEADER-001
+
+**Why Unsafe:**
+- The `%PDF-` header defines the document version and byte offset assumptions
+- A missing or malformed header usually indicates deeper corruption
+- Reconstructing a header without confirming file integrity risks invalid output
+
+**Recommended Tools:**
+- Adobe Acrobat Preflight
+- qpdf
+
+### 2. Cross-Reference Table Reconstruction
+
+**Error Codes:** PDF-XREF-001, PDF-XREF-002, PDF-XREF-003
+
+**Why Unsafe:**
+- Rebuilding xref requires scanning and reconstructing object offsets
+- Incremental updates and hybrid xref streams complicate safe inference
+- Incorrect xref rebuild can orphan objects or corrupt the catalog
+
+**Recommended Tools:**
+- qpdf (repair and linearize)
+- Ghostscript (re-distill)
+
+### 3. Font Embedding and Subsetting
 
 **Error Codes:** PDFA-FONT-* (PDF/A specific)
 
@@ -94,7 +120,7 @@ The following repairs are considered **unsafe** and require manual intervention 
 3. Use professional tool to embed/subset fonts
 4. Validate ToUnicode CMap correctness
 
-### 2. Compression Schemes
+### 4. Compression Schemes
 
 **Error Codes:** PDFA-COMPRESS-*
 
@@ -116,7 +142,7 @@ The following repairs are considered **unsafe** and require manual intervention 
 3. Re-encode using allowed compression (Flate, JPEG2000)
 4. Validate visual output matches original
 
-### 3. Structure Tree and Tagged PDF
+### 5. Structure Tree and Tagged PDF
 
 **Error Codes:** PDFUA-TAG-*, PDFUA-STRUCT-*
 
@@ -294,8 +320,8 @@ if !preview.CanAutoRepair {
     return
 }
 
-// 4. Apply automated repairs
-result, err := repairService.Apply(ctx, "document.pdf", preview)
+// 4. Apply automated repairs (write output to a new file)
+result, err := repairService.ApplyWithBackup(ctx, "document.pdf", preview, "document.repaired.pdf")
 if err != nil {
     log.Fatal(err)
 }
@@ -338,8 +364,8 @@ if result.Success {
 ### Error Handling
 - All repair operations return detailed error information
 - Partial failures are logged but don't stop other repairs
-- Original file is never modified directly
-- Backup files use `_repaired.pdf` suffix
+- Original file is never modified directly unless you choose in-place repair at a higher layer
+- Repaired outputs typically use a `_repaired.pdf` suffix; backups use `.bak` in CLI workflows
 
 ### Performance
 - Small repairs (EOF, startxref) are near-instantaneous

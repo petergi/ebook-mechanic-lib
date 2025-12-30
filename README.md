@@ -660,6 +660,9 @@ The CLI lives under `cmd/` and exposes validation, repair, and batch operations.
 # Validate a single file
 ebm-cli validate book.epub
 
+# Validate a single file (default command)
+ebm-cli book.epub
+
 # Validate with JSON output and severity filtering
 ebm-cli validate document.pdf --format json --min-severity warning
 

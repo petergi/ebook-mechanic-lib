@@ -42,6 +42,28 @@ ebm-lib is a comprehensive Go library for validating and repairing EPUB 3.x and 
 go get github.com/example/project/pkg/ebmlib
 ```
 
+### CLI Quick Start
+
+```bash
+# Validate a single file (default command)
+ebm-cli book.epub
+
+# Validate explicitly
+ebm-cli validate document.pdf --format json --min-severity warning
+
+# Repair in place with backup
+ebm-cli repair broken.epub --in-place --backup
+
+# Batch validate with progress
+ebm-cli batch validate ./library --jobs 8 --progress simple
+```
+
+For local dev runs, you can pass arguments through the Makefile:
+
+```bash
+make run RUN_ARGS="book.epub"
+```
+
 ### Basic EPUB Validation
 
 ```go
@@ -535,8 +557,8 @@ if result.Success {
 
 The following require manual intervention or specialized tools:
 
-- **Header corruption** - Affects document structure
-- **Cross-reference table damage** - Requires structural rebuild
+- **Header corruption** - Missing or invalid `%PDF-` header cannot be reconstructed safely
+- **Cross-reference table damage** - Requires full xref rebuild (not supported)
 - **Catalog issues** - Affects document root
 - **Encryption/password protection** - Cannot be removed safely
 
@@ -545,6 +567,12 @@ The following require manual intervention or specialized tools:
 - PDFtk (PDF Toolkit)
 - QPDF
 - VeraPDF (for validation)
+
+### Repair Output Paths
+
+- **Default output**: writes `<file>.repaired.<ext>` (leaves original untouched)
+- **In-place**: `--in-place` replaces the original file
+- **Backup**: `--backup` keeps a copy of the original (optionally `--backup-dir`)
 
 ### Repair Safety Levels
 

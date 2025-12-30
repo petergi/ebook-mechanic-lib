@@ -245,12 +245,20 @@ func RepairFile(ctx context.Context, path string, opts RepairOptions) (*ports.Re
 		}
 	}
 
-	finalReport, err := ValidateFile(ctx, path)
+	repairedPath := path
+	if !opts.InPlace {
+		repairedPath = outputPath
+	}
+	finalReport, err := ValidateFile(ctx, repairedPath)
 	if err != nil {
 		return result, report, err
 	}
 
 	return result, finalReport, nil
+}
+
+func DefaultRepairedPath(path string) string {
+	return defaultRepairedPath(path)
 }
 
 func defaultRepairedPath(path string) string {

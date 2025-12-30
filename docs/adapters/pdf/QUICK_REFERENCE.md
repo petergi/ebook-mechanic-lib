@@ -13,8 +13,8 @@ preview, _ := service.Preview(ctx, report)
 
 // Apply if safe
 if preview.CanAutoRepair {
-    result, _ := service.Apply(ctx, "file.pdf", preview)
-    fmt.Println(result.BackupPath) // _repaired.pdf
+    result, _ := service.ApplyWithBackup(ctx, "file.pdf", preview, "file.repaired.pdf")
+    fmt.Println(result.BackupPath) // output path
 }
 ```
 
@@ -59,7 +59,7 @@ if canRepair {
 service.CreateBackup(ctx, "file.pdf", "file.pdf.backup")
 
 // Apply repairs
-result, _ := service.Apply(ctx, "file.pdf", preview)
+result, _ := service.ApplyWithBackup(ctx, "file.pdf", preview, "file.repaired.pdf")
 
 // Rollback if needed
 if !result.Success {
@@ -99,7 +99,7 @@ preview := &ports.RepairPreview{
 result := &ports.RepairResult{
     Success:        bool            // Did it work?
     ActionsApplied: []RepairAction  // What was done
-    BackupPath:     string          // Where is repaired file?
+    BackupPath:     string          // Output path from ApplyWithBackup
     Error:          error           // What went wrong?
 }
 ```

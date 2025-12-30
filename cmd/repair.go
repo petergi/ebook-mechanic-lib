@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -53,30 +51,20 @@ func newRepairCmd(root *rootFlags) *cobra.Command {
 				return err
 			}
 
+			var reportErr error
 			if report != nil {
-				options, filter, err := buildReportOptions(root)
-				if err != nil {
-					return err
-				}
-				if root.output != "" {
-					if err := os.MkdirAll(filepath.Dir(root.output), 0750); err != nil {
-						return err
-					}
-				}
-				rep := cli.BuildReporter(options.Format, filter)
-				if root.output != "" {
-					if err := rep.WriteToFile(ctx, report, root.output, options); err != nil {
-						return err
-					}
-				} else {
-					if err := rep.Write(ctx, report, cmd.OutOrStdout(), options); err != nil {
-						return err
-					}
-				}
+				reportErr = writeValidationReport(ctx, cmd, root, report)
 			}
 
 			if result != nil {
 				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Repaired: %v\n", result.Success)
+				if flags.inPlace {
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Output: %s\n", args[0])
+				} else if flags.output != "" {
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Output: %s\n", flags.output)
+				} else {
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Output: %s\n", cli.DefaultRepairedPath(args[0]))
+				}
 				if result.BackupPath != "" {
 					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Backup: %s\n", result.BackupPath)
 				}
@@ -88,7 +76,11 @@ func newRepairCmd(root *rootFlags) *cobra.Command {
 				}
 			}
 
-			return cli.ExitWithReport(report)
+			if reportErr != nil {
+				return reportErr
+			}
+
+			return nil
 		},
 	}
 

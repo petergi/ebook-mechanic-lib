@@ -12,6 +12,7 @@ DOCKER_IMAGE=app
 DOCKER_TAG=latest
 COVERAGE_FILE=coverage.out
 COVERAGE_HTML=coverage.html
+RUN_ARGS?=
 
 # Directories
 CMD_DIR=./cmd
@@ -179,9 +180,9 @@ install: ## Install dependencies
 	@echo "$(BOLD)$(GREEN)✓ Dependencies installed$(RESET)"
 
 .PHONY: run
-run: ## Run the application
+run: ## Run the CLI (defaults to validate when no subcommand is provided)
 	@echo "$(BOLD)$(RED)Running application...$(RESET)"
-	$(GO) run $(CMD_DIR)/...
+	$(GO) run $(CMD_DIR)/... $(RUN_ARGS)
 
 .PHONY: docker-build
 docker-build: ## Build Docker image

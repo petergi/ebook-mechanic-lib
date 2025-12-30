@@ -35,9 +35,27 @@ func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           appName,
 		Short:         "Validate and repair EPUB and PDF files",
-		Long:          "ebm-lib CLI validates and repairs EPUB and PDF files with configurable output formats.",
+		Long:          "ebm-lib CLI validates and repairs EPUB and PDF files with configurable output formats. If no subcommand is provided, validate is assumed.",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return cmd.Help()
+			}
+			if args[0] == "-" {
+				return fmt.Errorf("stdin requires --type epub or pdf (use: ebm-cli validate - --type epub)")
+			}
+
+			ctx, cancel := withSignalContext(context.Background())
+			defer cancel()
+
+			report, err := cli.ValidateFile(ctx, args[0])
+			if err != nil {
+				return err
+			}
+
+			return writeValidationReport(ctx, cmd, flags, report)
+		},
 		PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 			return cli.ValidateFormat(flags.format)
 		},

@@ -20,6 +20,32 @@ type validateFlags struct {
 	fileType string
 }
 
+func writeValidationReport(ctx context.Context, cmd *cobra.Command, root *rootFlags, report *domain.ValidationReport) error {
+	options, filter, err := buildReportOptions(root)
+	if err != nil {
+		return err
+	}
+	if root.output != "" {
+		if err := os.MkdirAll(filepath.Dir(root.output), 0750); err != nil {
+			return err
+		}
+	}
+
+	rep := cli.BuildReporter(options.Format, filter)
+
+	if root.output != "" {
+		if err := rep.WriteToFile(ctx, report, root.output, options); err != nil {
+			return err
+		}
+	} else {
+		if err := rep.Write(ctx, report, cmd.OutOrStdout(), options); err != nil {
+			return err
+		}
+	}
+
+	return cli.ExitWithReport(report)
+}
+
 func newValidateCmd(root *rootFlags) *cobra.Command {
 	flags := &validateFlags{}
 
@@ -37,19 +63,8 @@ func newValidateCmd(root *rootFlags) *cobra.Command {
 			ctx, cancel := withSignalContext(context.Background())
 			defer cancel()
 
-			options, filter, err := buildReportOptions(root)
-			if err != nil {
-				return err
-			}
-			if root.output != "" {
-				if err := os.MkdirAll(filepath.Dir(root.output), 0750); err != nil {
-					return err
-				}
-			}
-
-			rep := cli.BuildReporter(options.Format, filter)
-
 			target := args[0]
+			var err error
 			var report *domain.ValidationReport
 
 			if target == "-" {
@@ -71,17 +86,7 @@ func newValidateCmd(root *rootFlags) *cobra.Command {
 				}
 			}
 
-			if root.output != "" {
-				if err := rep.WriteToFile(ctx, report, root.output, options); err != nil {
-					return err
-				}
-			} else {
-				if err := rep.Write(ctx, report, cmd.OutOrStdout(), options); err != nil {
-					return err
-				}
-			}
-
-			return cli.ExitWithReport(report)
+			return writeValidationReport(ctx, cmd, root, report)
 		},
 	}
 

@@ -91,8 +91,8 @@ func main() {
         fmt.Printf("%d. %s - %s\n", i+1, action.Type, action.Description)
     }
 
-    // 6. Apply repairs
-    result, err := repairService.Apply(ctx, "broken.pdf", preview)
+    // 6. Apply repairs (write repaired output to a new file)
+    result, err := repairService.ApplyWithBackup(ctx, "broken.pdf", preview, "broken.repaired.pdf")
     if err != nil {
         log.Fatal(err)
     }
@@ -162,7 +162,7 @@ type RepairResult struct {
     Success        bool            // True if all repairs succeeded
     ActionsApplied []RepairAction  // Actions that were applied
     Report         *ValidationReport // Post-repair validation (optional)
-    BackupPath     string          // Path to repaired file
+    BackupPath     string          // Path passed to ApplyWithBackup (repaired output)
     Error          error           // Error if repair failed
 }
 ```
@@ -205,6 +205,8 @@ err := repairService.RestoreBackup(ctx, backupPath, originalPath)
 ```
 
 Restores a file from backup.
+
+**Note:** `BackupPath` is the output path when using `ApplyWithBackup`. When using the CLI with `--in-place --backup`, the CLI reports the repaired output path separately from the backup of the original.
 
 ### High-Level Repair Functions
 
