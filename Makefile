@@ -52,6 +52,9 @@ help: ## Display this help message
 	@echo "$(BOLD)$(CYAN)Docs Targets:$(RESET)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; /^docs/ || /^wiki/ {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
+	@echo "$(BOLD)$(CYAN)Workflow Targets:$(RESET)"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; /^check/ {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}'
+	@echo ""
 	@echo "$(BOLD)$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)"
 	@echo ""
 
@@ -215,6 +218,10 @@ docs-spell: ## Spellcheck docs (requires codespell)
 	else \
 		printf "%b\n" "$(BOLD)$(YELLOW)! codespell not installed. Install with: pip install codespell$(RESET)"; \
 	fi
+
+.PHONY: check
+check: build test lint vet docs ## Run build, tests, lint, vet, and docs without benchmarks/coverage
+	@echo "$(BOLD)$(GREEN)✓ Checks complete (no benchmark/coverage artifacts)$(RESET)"
 
 # Wiki Operations
 .PHONY: wiki-clone
