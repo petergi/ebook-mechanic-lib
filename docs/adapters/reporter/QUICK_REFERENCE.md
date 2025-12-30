@@ -306,6 +306,6 @@ func TestMyReporter(t *testing.T) {
 ## See Also
 
 - [README.md](README.md) - Full documentation
-- [examples/reporter_example.go](../../examples/reporter_example.go) - Complete examples
-- [internal/ports/reporter.go](../../ports/reporter.go) - Interface definitions
-- [internal/domain/validation.go](../../domain/validation.go) - Data structures
+- [examples/reporter_example/main.go](../../../examples/reporter_example/main.go) - Complete examples
+- [internal/ports/reporter.go](../../../internal/ports/reporter.go) - Interface definitions
+- [internal/domain/validation.go](../../../internal/domain/validation.go) - Data structures

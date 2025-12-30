@@ -13,10 +13,10 @@ make coverage
 
 ## Documentation
 
-- tests/README.md - Main documentation
-- tests/QUICK_REFERENCE.md - Quick commands
-- tests/integration/README.md - Integration tests
-- testdata/README.md - Fixtures
+- docs/tests/README.md - Main documentation
+- docs/tests/QUICK_REFERENCE.md - Quick commands
+- docs/tests/integration/README.md - Integration tests
+- docs/testdata/README.md - Fixtures
 - docs/TEST_SUITE.md - Comprehensive guide
 
 ## Status: COMPLETE

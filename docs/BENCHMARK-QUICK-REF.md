@@ -135,9 +135,9 @@ func BenchmarkFeature_Scenario(b *testing.B) {
 
 ## Resources
 
-- Full guide: [docs/BENCHMARKING.md](BENCHMARKING.md)
-- Baseline metrics: [tests/integration/BENCHMARKS.md](../tests/integration/BENCHMARKS.md)
-- Test integration: [tests/integration/README.md](../tests/integration/README.md)
+- Full guide: [BENCHMARKING.md](BENCHMARKING.md)
+- Baseline metrics: [tests/integration/BENCHMARKS.md](tests/integration/BENCHMARKS.md)
+- Test integration: [tests/integration/README.md](tests/integration/README.md)
 
 ## Quick Decision Tree
 

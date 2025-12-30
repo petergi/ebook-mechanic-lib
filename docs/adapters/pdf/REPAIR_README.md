@@ -525,4 +525,4 @@ Part of ebm-lib project. See LICENSE file for details.
 - [ERROR_CODES.md](./ERROR_CODES.md) - Complete error code reference
 - [REPAIR_LIMITATIONS.md](./REPAIR_LIMITATIONS.md) - Safety guidelines and limitations
 - [docs/specs/ebm-lib-PDF-SPEC.md](../../../docs/specs/ebm-lib-PDF-SPEC.md) - PDF validation spec
-- [internal/ports/repair.go](../../ports/repair.go) - Repair service interface definition
+- [internal/ports/repair.go](../../../internal/ports/repair.go) - Repair service interface definition

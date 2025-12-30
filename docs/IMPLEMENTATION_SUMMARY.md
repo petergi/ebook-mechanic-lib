@@ -269,4 +269,4 @@ The implementation:
 
 ## Conclusion
 
-This implementation provides a complete, production-ready public API for the EBM library with comprehensive documentation and examples. The API is simple to use for common cases while providing advanced options for complex scenarios. All code follows Go best practices and the existing hexagonal architecture patterns.
+This implementation provides a complete, production-ready public API for the ebm-lib library with comprehensive documentation and examples. The API is simple to use for common cases while providing advanced options for complex scenarios. All code follows Go best practices and the existing hexagonal architecture patterns.

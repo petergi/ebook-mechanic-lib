@@ -197,13 +197,13 @@ const (
 
 ## Usage Examples
 
-See the [examples directory](../../examples/) for complete, runnable examples:
+See the [examples directory](../../../examples/) for complete, runnable examples:
 
-- **[basic_validation.go](../../examples/basic_validation.go)** - Simple validation
-- **[repair_example.go](../../examples/repair_example.go)** - Repair workflow
-- **[custom_reporting.go](../../examples/custom_reporting.go)** - Report formatting
-- **[advanced_validation.go](../../examples/advanced_validation.go)** - Batch processing
-- **[complete_workflow.go](../../examples/complete_workflow.go)** - End-to-end workflow
+- **[basic_validation](../../../examples/basic_validation/main.go)** - Simple validation
+- **[repair_example](../../../examples/repair_example/main.go)** - Repair workflow
+- **[custom_reporting](../../../examples/custom_reporting/main.go)** - Report formatting
+- **[advanced_validation](../../../examples/advanced_validation/main.go)** - Batch processing
+- **[complete_workflow](../../../examples/complete_workflow/main.go)** - End-to-end workflow
 
 ## Design Principles
 
@@ -246,7 +246,6 @@ This is a stable public API. Breaking changes will be avoided, and deprecated fu
 
 ## See Also
 
-- [Main README](../../README.md) - Complete documentation
-- [Package documentation](doc.go) - GoDoc comments
-- [Examples Index](../../examples/INDEX.md) - Example reference
-- [AGENTS.md](../../AGENTS.md) - Development guide
+- [Main README](../../../README.md) - Complete documentation
+- [Package documentation](../../../pkg/ebmlib/doc.go) - GoDoc comments
+- [AGENTS.md](../../../AGENTS.md) - Development guide

@@ -525,4 +525,4 @@ When contributing benchmarks or optimizations:
 5. Verify all existing benchmarks pass
 6. Run benchstat for statistical validation
 
-Questions? See [CONTRIBUTING.md](../CONTRIBUTING.md) or open an issue.
+Questions? See [README.md](../README.md) or open an issue.

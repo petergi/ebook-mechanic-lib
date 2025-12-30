@@ -53,48 +53,48 @@ All requested functionality has been fully implemented:
 
 ### Documentation (6 files)
 
-3. **internal/adapters/pdf/REPAIR_README.md** (714 lines)
+3. **docs/adapters/pdf/REPAIR_README.md** (714 lines)
    - Complete API documentation
    - Usage examples
    - Quick start guide
    - Integration patterns
 
-4. **internal/adapters/pdf/REPAIR_LIMITATIONS.md** (526 lines)
+4. **docs/adapters/pdf/REPAIR_LIMITATIONS.md** (526 lines)
    - Detailed safety analysis
    - Why certain repairs are unsafe
    - Font, compression, structure tree limitations
    - External tool recommendations
 
-5. **internal/adapters/pdf/QUICK_REFERENCE.md** (275 lines)
+5. **docs/adapters/pdf/QUICK_REFERENCE.md** (275 lines)
    - One-minute quick start
    - Cheat sheet format
    - Common patterns
    - Quick links
 
-6. **internal/adapters/pdf/IMPLEMENTATION_SUMMARY.md** (437 lines)
+6. **docs/adapters/pdf/IMPLEMENTATION_SUMMARY.md** (437 lines)
    - Complete implementation overview
    - File-by-file breakdown
    - Test coverage analysis
    - Design principles
 
-7. **internal/adapters/pdf/DOC.md** (Updated)
+7. **docs/adapters/pdf/DOC.md** (Updated)
    - Added repair service section
    - Integration documentation
    - Design principles
 
-8. **internal/adapters/pdf/ERROR_CODES.md** (Updated)
+8. **docs/adapters/pdf/ERROR_CODES.md** (Updated)
    - Added repair classification table
    - Automated vs manual indicators
    - Usage examples
 
 ### Updated Files (2 files)
 
-9. **internal/adapters/pdf/CHECKLIST.md** (Updated)
+9. **docs/adapters/pdf/CHECKLIST.md** (Updated)
    - Added repair service checklist items
    - Updated statistics
    - Added test coverage info
 
-10. **internal/adapters/pdf/IMPLEMENTATION_SUMMARY.md** (Updated from validator)
+10. **docs/adapters/pdf/IMPLEMENTATION_SUMMARY.md** (Updated from validator)
     - Expanded to include repair service
     - Updated statistics
 
@@ -403,9 +403,9 @@ The implementation is ready for integration with CLI, API, or other consumers of
 
 ## Quick Links
 
-- **API Documentation**: [internal/adapters/pdf/REPAIR_README.md](internal/adapters/pdf/REPAIR_README.md)
-- **Safety Guidelines**: [internal/adapters/pdf/REPAIR_LIMITATIONS.md](internal/adapters/pdf/REPAIR_LIMITATIONS.md)
-- **Quick Reference**: [internal/adapters/pdf/QUICK_REFERENCE.md](internal/adapters/pdf/QUICK_REFERENCE.md)
-- **Implementation**: [internal/adapters/pdf/repair_service.go](internal/adapters/pdf/repair_service.go)
-- **Tests**: [internal/adapters/pdf/repair_service_test.go](internal/adapters/pdf/repair_service_test.go)
-- **Examples**: [examples/pdf_repair/main.go](examples/pdf_repair/main.go)
+- **API Documentation**: [adapters/pdf/REPAIR_README.md](adapters/pdf/REPAIR_README.md)
+- **Safety Guidelines**: [adapters/pdf/REPAIR_LIMITATIONS.md](adapters/pdf/REPAIR_LIMITATIONS.md)
+- **Quick Reference**: [adapters/pdf/QUICK_REFERENCE.md](adapters/pdf/QUICK_REFERENCE.md)
+- **Implementation**: [../internal/adapters/pdf/repair_service.go](../internal/adapters/pdf/repair_service.go)
+- **Tests**: [../internal/adapters/pdf/repair_service_test.go](../internal/adapters/pdf/repair_service_test.go)
+- **Examples**: [../examples/pdf_repair/main.go](../examples/pdf_repair/main.go)

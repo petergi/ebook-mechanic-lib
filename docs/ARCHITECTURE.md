@@ -172,7 +172,7 @@ ebm-lib implements a **hexagonal architecture** (also known as Ports & Adapters 
 │                   EXTERNAL DEPENDENCIES                     │
 │                                                             │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │
-│  │ File System │  │ archive/zip │  │unipdf/pdfcpu│       │
+│  │ File System │  │ archive/zip │  │unidoc/unipdf│       │
 │  └─────────────┘  └─────────────┘  └─────────────┘       │
 │                                                             │
 │  ┌─────────────┐  ┌─────────────┐                         │
@@ -401,6 +401,154 @@ Formatted Output (string or file)
       └─► Documentation
 ```
 
+### Sequence Diagram: Validate
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant CLI as ebm-cli
+    participant API as pkg/ebmlib
+    participant Ports as ports.Validator
+    participant Adapter as adapters/epub|pdf
+    participant Domain as domain.ValidationReport
+
+    User->>CLI: validate <path>
+    CLI->>API: ValidateEPUB/PDF(path)
+    API->>Ports: ValidateFile(ctx, path)
+    Ports->>Adapter: ValidateFile(ctx, path)
+    Adapter->>Adapter: parse + validate
+    Adapter->>Domain: build report
+    Domain-->>Adapter: report
+    Adapter-->>Ports: report
+    Ports-->>API: report
+    API-->>CLI: report
+    CLI-->>User: output + exit code
+```
+
+### Sequence Diagram: Repair
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant CLI as ebm-cli
+    participant API as pkg/ebmlib
+    participant Validator as ports.Validator
+    participant Repair as ports.RepairService
+    participant Adapter as adapters/epub|pdf
+    participant Domain as domain.ValidationReport
+
+    User->>CLI: repair <path>
+    CLI->>API: RepairEPUB/PDF(path)
+    API->>Validator: ValidateFile(ctx, path)
+    Validator->>Adapter: ValidateFile(ctx, path)
+    Adapter->>Domain: report
+    Domain-->>Adapter: report
+    Adapter-->>Validator: report
+    Validator-->>API: report
+    API->>Repair: Preview(ctx, report)
+    Repair->>Adapter: build preview
+    Adapter-->>Repair: preview
+    Repair-->>API: preview
+    API->>Repair: Apply(ctx, path, preview)
+    Repair->>Adapter: apply repairs
+    Adapter-->>Repair: result
+    Repair-->>API: result
+    API-->>CLI: result
+    CLI-->>User: output + exit code
+```
+
+### CLI System
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                       CLI Flow                           │
+└──────────────────────────────────────────────────────────┘
+
+User Shell
+   │
+   ▼
+ebm-cli root (cobra)
+   │
+   ├─► validate ──► internal/cli/validate.go
+   │              └─► ports.Validator
+   │                   └─► adapters/epub|pdf
+   │
+   ├─► repair ───► internal/cli/repair.go
+   │              └─► ports.RepairService
+   │                   └─► adapters/epub|pdf
+   │
+   └─► batch ────► internal/cli/batch.go
+                  └─► internal/batch (worker pool)
+                       ├─► ports.Validator
+                       └─► ports.RepairService
+```
+
+### Batch Engine
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                 Batch Worker Pool                         │
+└──────────────────────────────────────────────────────────┘
+
+Input paths
+   │
+   ▼
+Discovery (glob/dir walk)
+   │
+   ▼
+Jobs channel (buffered)  <─── backpressure
+   │
+   ├─► worker 1 ──► validate/repair ──► result channel
+   ├─► worker 2 ──► validate/repair ──► result channel
+   ├─► worker 3 ──► validate/repair ──► result channel
+   └─► worker N ──► validate/repair ──► result channel
+                      ▲
+                      │
+                 context cancel
+
+Aggregator
+   ├─► progress callbacks
+   ├─► error aggregation
+   └─► summary report
+```
+
+### Deployment Diagram
+
+```mermaid
+flowchart LR
+    User[User / CI] --> CLI[ebm-cli binary]
+    CLI --> FS[Local Filesystem]
+    CLI --> Lib[pkg/ebmlib]
+    Lib --> Adapters[internal/adapters]
+    Adapters --> ZIP[archive/zip]
+    Adapters --> HTML[golang.org/x/net/html]
+    Adapters --> PDF[github.com/unidoc/unipdf/v3]
+    CLI --> Reports[Report Output\ntext/json/markdown]
+```
+
+### Runtime Diagram
+
+```mermaid
+flowchart TB
+    Start[CLI start] --> Parse[Parse flags]
+    Parse --> Mode{Mode}
+    Mode -->|validate| V[Validation pipeline]
+    Mode -->|repair| R[Repair pipeline]
+    Mode -->|batch| B[Batch engine]
+
+    V --> Report[ValidationReport]
+    R --> RepairResult[RepairResult]
+    B --> Summary[Batch summary]
+
+    Report --> Output[Renderer]
+    RepairResult --> Output
+    Summary --> Output
+
+    Output --> Exit[Exit code]
+```
+
 ---
 
 ## Data Flow
@@ -577,7 +725,36 @@ Input: ValidationReport
 └──────────────┬──────────────────────┘
                │
                ▼
-        RepairResult
+RepairResult
+```
+
+### Batch Validation Data Flow
+
+```
+Input: path list / glob / directory
+      │
+      ▼
+1. Resolve inputs
+   - Expand globs
+   - Walk directories (depth + filters)
+   - Apply ignore patterns
+      │
+      ▼
+2. Enqueue jobs (buffered channel)
+      │
+      ▼
+3. Worker pool
+   - Validate or repair per file
+   - Respect context cancellation
+      │
+      ▼
+4. Aggregate results
+   - Collect reports
+   - Track warnings/errors
+   - Emit progress updates
+      │
+      ▼
+Batch summary + exit code
 ```
 
 ---
@@ -611,9 +788,7 @@ Input: ValidationReport
   - License: Commercial-friendly open source
 
 #### Optional (Future)
-- **github.com/pdfcpu/pdfcpu**
-  - Alternative PDF processing library
-  - May be used for specific repair operations
+- None currently planned
 
 ### Build & Development Tools
 - **Make** - Build automation
@@ -633,7 +808,8 @@ Input: ValidationReport
 
 ### 1. Why Hexagonal Architecture?
 
-**Decision:** Use hexagonal (ports & adapters) architecture
+**Decision:** Use hexagonal (ports & adapters) architecture  
+**ADR:** `docs/adr/ADR-001-hexagonal-architecture.md`
 
 **Rationale:**
 - **Testability:** Easy to mock external dependencies via ports
@@ -655,7 +831,8 @@ Input: ValidationReport
 
 ### 2. Why Go?
 
-**Decision:** Implement in Go rather than other languages
+**Decision:** Implement in Go rather than other languages  
+**ADR:** `docs/adr/ADR-004-go-language-choice.md`
 
 **Rationale:**
 - **Performance:** Fast compilation and execution
@@ -678,7 +855,8 @@ Input: ValidationReport
 
 ### 3. Domain-First Design
 
-**Decision:** Start with domain entities, then define ports, then implement adapters
+**Decision:** Start with domain entities, then define ports, then implement adapters  
+**ADR:** `docs/adr/ADR-005-domain-first-design.md`
 
 **Rationale:**
 - **Focus on business logic** before implementation details
@@ -693,7 +871,8 @@ Input: ValidationReport
 
 ### 4. Interface-Based Ports
 
-**Decision:** Define behavior through interfaces rather than concrete types
+**Decision:** Define behavior through interfaces rather than concrete types  
+**ADR:** `docs/adr/ADR-006-interface-based-ports.md`
 
 **Rationale:**
 - **Dependency Inversion:** High-level modules don't depend on low-level modules
@@ -708,7 +887,8 @@ Input: ValidationReport
 
 ### 5. Context Support
 
-**Decision:** Provide context-aware functions for all long-running operations
+**Decision:** Provide context-aware functions for all long-running operations  
+**ADR:** `docs/adr/ADR-007-context-aware-operations.md`
 
 **Rationale:**
 - **Cancellation:** Allow users to cancel long operations
@@ -723,7 +903,8 @@ Input: ValidationReport
 
 ### 6. Error Handling Strategy
 
-**Decision:** Distinguish between operational errors and validation errors
+**Decision:** Distinguish between operational errors and validation errors  
+**ADR:** `docs/adr/ADR-008-error-handling-separation.md`
 
 **Rationale:**
 - **Clarity:** Different types of problems require different handling
@@ -754,7 +935,8 @@ if !report.IsValid {
 
 ### 7. Repair Safety Levels
 
-**Decision:** Classify repairs by safety level and require different approval levels
+**Decision:** Classify repairs by safety level and require different approval levels  
+**ADR:** `docs/adr/ADR-009-repair-safety-levels.md`
 
 **Rationale:**
 - **User Trust:** Users need confidence repairs won't corrupt files
@@ -774,7 +956,8 @@ if !report.IsValid {
 
 ### 8. Structured Error Codes
 
-**Decision:** Use structured, hierarchical error codes
+**Decision:** Use structured, hierarchical error codes  
+**ADR:** `docs/adr/ADR-010-structured-error-codes.md`
 
 **Format:** `<FORMAT>-<CATEGORY>-<NUMBER>`
 
@@ -792,7 +975,8 @@ if !report.IsValid {
 
 ### 9. Multiple Output Formats
 
-**Decision:** Support JSON, Text, and Markdown report formats
+**Decision:** Support JSON, Text, and Markdown report formats  
+**ADR:** `docs/adr/ADR-011-reporting-output-formats.md`
 
 **Rationale:**
 - **JSON:** Machine-readable for APIs and automation
@@ -807,7 +991,8 @@ if !report.IsValid {
 
 ### 10. Test Data Organization
 
-**Decision:** Separate test fixtures by validity and error type
+**Decision:** Separate test fixtures by validity and error type  
+**ADR:** `docs/adr/ADR-012-testdata-organization.md`
 
 **Structure:**
 ```
@@ -829,6 +1014,26 @@ testdata/
 - **Completeness:** Ensures coverage of all error types
 - **Maintainability:** Simple to add new test cases
 - **Documentation:** Test files serve as examples
+
+### 11. CLI Framework
+
+**Decision:** Use Cobra for CLI commands and flag management  
+**ADR:** `docs/adr/ADR-013-cobra-cli.md`
+
+**Rationale:**
+- Standardized help text and flag parsing
+- Consistent command layout (validate/repair/batch)
+- Stable foundation for future CLI growth
+
+### 12. Batch Engine
+
+**Decision:** Use a worker-pool batch engine with buffered channels and context cancellation  
+**ADR:** `docs/adr/ADR-014-batch-engine-worker-pool.md`
+
+**Rationale:**
+- Scales across cores with predictable resource usage
+- Supports partial results and graceful shutdown
+- Provides backpressure for large workloads
 
 ---
 

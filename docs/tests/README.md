@@ -100,7 +100,7 @@ make clean-fixtures generate-fixtures
 - 3 valid (minimal, 100 pages, 1000 pages)
 - 9 invalid (covering all error codes)
 
-See `testdata/README.md` for complete fixture documentation.
+See `docs/testdata/README.md` for complete fixture documentation.
 
 ## Make Targets
 
@@ -304,9 +304,9 @@ go test -run TestName ./...
 
 ## Documentation
 
-- `tests/integration/README.md` - Integration test guide
-- `tests/integration/TEST_SUMMARY.md` - Implementation details
-- `testdata/README.md` - Fixture documentation
+- `docs/tests/integration/README.md` - Integration test guide
+- `docs/tests/integration/TEST_SUMMARY.md` - Implementation details
+- `docs/testdata/README.md` - Fixture documentation
 - `docs/TEST_SUITE.md` - Comprehensive test documentation
 
 ## Maintenance

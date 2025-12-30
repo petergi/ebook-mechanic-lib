@@ -222,9 +222,9 @@ func BenchmarkValidator(b *testing.B) {}
 
 ## Documentation
 
-- `tests/README.md` - Main test documentation
-- `tests/integration/README.md` - Integration test guide
-- `testdata/README.md` - Fixture documentation
+- `docs/tests/README.md` - Main test documentation
+- `docs/tests/integration/README.md` - Integration test guide
+- `docs/testdata/README.md` - Fixture documentation
 - `docs/TEST_SUITE.md` - Comprehensive guide
 
 ## CI/CD

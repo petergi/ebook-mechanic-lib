@@ -32,7 +32,7 @@ A comprehensive CI/CD pipeline has been implemented with:
 ### Scripts
 - `scripts/setup-hooks.sh` - Helper script to install pre-commit hooks
 - `scripts/check-coverage.sh` - Script to check coverage threshold locally
-- `scripts/README.md` - Documentation for scripts
+- `docs/scripts/README.md` - Documentation for scripts
 
 ### Documentation
 - `docs/CI.md` - Comprehensive CI/CD pipeline documentation
@@ -187,9 +187,9 @@ The `Dockerfile` implements a secure multi-stage build:
 
 ## 📚 Documentation
 
-- **[CI.md](docs/CI.md)** - Comprehensive documentation covering all aspects of the CI/CD pipeline
-- **[CI_QUICKSTART.md](docs/CI_QUICKSTART.md)** - Quick start guide for developers
-- **[CI_BADGE.md](docs/CI_BADGE.md)** - Instructions for adding status badges
+- **[CI.md](CI.md)** - Comprehensive documentation covering all aspects of the CI/CD pipeline
+- **[CI_QUICKSTART.md](CI_QUICKSTART.md)** - Quick start guide for developers
+- **[CI_BADGE.md](CI_BADGE.md)** - Instructions for adding status badges
 
 ## 🔧 Local Development
 

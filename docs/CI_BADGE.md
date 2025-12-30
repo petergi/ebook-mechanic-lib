@@ -48,5 +48,5 @@ This project maintains the following quality standards:
 - ✅ Passes golangci-lint with 30+ linters
 - ✅ Docker image builds successfully
 
-See [CI/CD documentation](docs/CI.md) for details.
+See [CI/CD documentation](CI.md) for details.
 ```

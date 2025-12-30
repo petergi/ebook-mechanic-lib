@@ -261,6 +261,6 @@ Tools to consider:
 ## References
 
 - [Benchmark Documentation](BENCHMARKING.md)
-- [Baseline Metrics](../tests/integration/BENCHMARKS.md)
+- [Baseline Metrics](tests/integration/BENCHMARKS.md)
 - [Quick Reference](BENCHMARK-QUICK-REF.md)
-- [Integration Tests](../tests/integration/README.md)
+- [Integration Tests](tests/integration/README.md)

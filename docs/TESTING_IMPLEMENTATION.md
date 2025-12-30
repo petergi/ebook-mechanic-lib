@@ -99,12 +99,12 @@ make clean-fixtures       # Clean generated fixtures
 
 ### 6. Documentation (✓ Complete)
 
-1. **tests/README.md** - Test infrastructure overview
-2. **tests/integration/README.md** - Integration test guide
-3. **tests/integration/TEST_SUMMARY.md** - Implementation details
-4. **testdata/README.md** - Fixture documentation
+1. **docs/tests/README.md** - Test infrastructure overview
+2. **docs/tests/integration/README.md** - Integration test guide
+3. **docs/tests/integration/TEST_SUMMARY.md** - Implementation details
+4. **docs/testdata/README.md** - Fixture documentation
 5. **docs/TEST_SUITE.md** - Comprehensive test documentation
-6. **TESTING_IMPLEMENTATION.md** - This document
+6. **docs/TESTING_IMPLEMENTATION.md** - This document
 
 ## Test Statistics
 

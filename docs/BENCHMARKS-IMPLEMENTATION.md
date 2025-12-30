@@ -62,14 +62,14 @@ Comprehensive benchmark tests covering:
   - Contribution guidelines
 
 #### Test Documentation
-- **`tests/integration/BENCHMARKS.md`**: Baseline metrics and targets
+- **`docs/tests/integration/BENCHMARKS.md`**: Baseline metrics and targets
   - Detailed performance targets
   - Regression detection thresholds
   - Optimization priorities
   - Benchmark history tracking
   - Monitoring and analysis guidelines
 
-- **`tests/integration/README.md`**: Integration test guide
+- **`docs/tests/integration/README.md`**: Integration test guide
   - Test organization
   - Running instructions
   - Benchmark overview
@@ -228,8 +228,8 @@ benchstat old.txt new.txt
 
 ### New Files
 - `tests/integration/benchmark_test.go` - Main benchmark suite
-- `tests/integration/BENCHMARKS.md` - Baseline metrics documentation
-- `tests/integration/README.md` - Integration test guide
+- `docs/tests/integration/BENCHMARKS.md` - Baseline metrics documentation
+- `docs/tests/integration/README.md` - Integration test guide
 - `tests/integration/.benchmark-template.txt` - Result template
 - `scripts/run-benchmarks.sh` - Benchmark execution script
 - `scripts/benchmark-compare.sh` - Comparison and regression detection script
@@ -237,7 +237,7 @@ benchstat old.txt new.txt
 - `docs/BENCHMARK-QUICK-REF.md` - Quick reference card
 - `docs/PERFORMANCE-CHANGELOG.md` - Performance tracking
 - `.github/workflows/benchmark-comment.yml` - PR comment workflow
-- `BENCHMARKS-IMPLEMENTATION.md` - This document
+- `docs/BENCHMARKS-IMPLEMENTATION.md` - This document
 
 ### Modified Files
 - `Makefile` - Added benchmark targets
@@ -322,7 +322,7 @@ go tool pprof -http=:8080 cpu.prof
 
 ## Questions or Issues?
 
-- See [docs/BENCHMARKING.md](docs/BENCHMARKING.md) for detailed guide
-- Check [docs/BENCHMARK-QUICK-REF.md](docs/BENCHMARK-QUICK-REF.md) for quick reference
+- See [BENCHMARKING.md](BENCHMARKING.md) for detailed guide
+- Check [BENCHMARK-QUICK-REF.md](BENCHMARK-QUICK-REF.md) for quick reference
 - Review [tests/integration/BENCHMARKS.md](tests/integration/BENCHMARKS.md) for targets
 - Refer to [tests/integration/README.md](tests/integration/README.md) for troubleshooting

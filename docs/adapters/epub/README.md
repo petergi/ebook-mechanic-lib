@@ -221,7 +221,7 @@ The validator is:
 
 - [DOC.md](DOC.md) - Complete API documentation with examples
 - [ERROR_CODES.md](ERROR_CODES.md) - Detailed error code reference
-- [testdata/epub/README.md](../../../testdata/epub/README.md) - Test fixture documentation
+- [docs/testdata/epub/README.md](../../testdata/epub/README.md) - Test fixture documentation
 
 ## Future Enhancements
 

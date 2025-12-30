@@ -49,6 +49,9 @@ help: ## Display this help message
 	@echo "$(BOLD)$(RED)Development Targets:$(RESET)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; /^run/ || /^clean/ {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
+	@echo "$(BOLD)$(CYAN)Docs Targets:$(RESET)"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; /^docs/ || /^wiki/ {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}'
+	@echo ""
 	@echo "$(BOLD)$(CYAN)━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━$(RESET)"
 	@echo ""
 
@@ -182,5 +185,84 @@ docker-build: ## Build Docker image
 	@echo "$(BOLD)$(GREEN)Building Docker image...$(RESET)"
 	docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
 	@echo "$(BOLD)$(GREEN)✓ Docker image built: $(DOCKER_IMAGE):$(DOCKER_TAG)$(RESET)"
+
+.PHONY: docs
+docs: docs-links docs-lint docs-spell ## Validate documentation
+	@echo "$(BOLD)$(GREEN)✓ Documentation checks complete$(RESET)"
+
+.PHONY: docs-links
+docs-links: ## Validate local markdown links
+	@echo "$(BOLD)$(BLUE)Checking markdown links...$(RESET)"
+	@python - <<'PY'\nfrom pathlib import Path\nimport re\n\nroot = Path('.')\nmd_files = [p for p in root.rglob('*.md')]\nlink_re = re.compile(r'\\[[^\\]]*\\]\\(([^)]+)\\)')\n\nmissing = []\nfor md in md_files:\n    text = md.read_text(encoding='utf-8')\n    for link in link_re.findall(text):\n        if link.startswith(('http://','https://','mailto:')):\n            continue\n        if link.startswith('#'):\n            continue\n        link_path = link.split('#',1)[0].strip()\n        if not link_path:\n            continue\n        if link_path.startswith('data:'):\n            continue\n        target = (md.parent / link_path).resolve()\n        if not target.exists():\n            missing.append((md, link))\n\nif missing:\n    print('Missing links:')\n    for md, link in missing:\n        print(f'- {md}: {link}')\n    raise SystemExit(1)\n\nprint('All local markdown links resolve.')\nPY
+
+.PHONY: docs-lint
+docs-lint: ## Lint markdown files (requires markdownlint-cli2)
+	@echo "$(BOLD)$(BLUE)Linting markdown...$(RESET)"
+	@if command -v markdownlint-cli2 > /dev/null 2>&1; then \
+		markdownlint-cli2 \"**/*.md\" --config .markdownlint.yaml; \
+		echo \"$(BOLD)$(GREEN)✓ Markdown lint complete$(RESET)\"; \
+	else \
+		echo \"$(BOLD)$(RED)✗ markdownlint-cli2 not installed. Install with: npm i -g markdownlint-cli2$(RESET)\"; \
+		exit 1; \
+	fi
+
+.PHONY: docs-spell
+docs-spell: ## Spellcheck docs (requires codespell)
+	@echo "$(BOLD)$(BLUE)Spellchecking docs...$(RESET)"
+	@if command -v codespell > /dev/null 2>&1; then \
+		codespell --config .codespellrc .; \
+		echo \"$(BOLD)$(GREEN)✓ Spellcheck complete$(RESET)\"; \
+	else \
+		echo \"$(BOLD)$(RED)✗ codespell not installed. Install with: pip install codespell$(RESET)\"; \
+		exit 1; \
+	fi
+
+# Wiki Operations
+.PHONY: wiki-clone
+wiki-clone: ## Clone the GitHub wiki repository
+	@echo "$(BOLD)$(BLUE)Cloning wiki repository...$(RESET)"
+	@chmod +x scripts/wiki-sync.sh
+	@./scripts/wiki-sync.sh clone
+	@echo "$(BOLD)$(GREEN)✓ Wiki repository cloned$(RESET)"
+
+.PHONY: wiki-sync
+wiki-sync: ## Sync documentation to wiki (does not push)
+	@echo "$(BOLD)$(BLUE)Syncing documentation to wiki...$(RESET)"
+	@chmod +x scripts/wiki-sync.sh
+	@./scripts/wiki-sync.sh sync
+	@echo "$(BOLD)$(GREEN)✓ Documentation synced to wiki$(RESET)"
+
+.PHONY: wiki-push
+wiki-push: ## Commit and push wiki changes
+	@echo "$(BOLD)$(BLUE)Pushing wiki changes...$(RESET)"
+	@chmod +x scripts/wiki-sync.sh
+	@./scripts/wiki-sync.sh push
+	@echo "$(BOLD)$(GREEN)✓ Wiki changes pushed$(RESET)"
+
+.PHONY: wiki-pull
+wiki-pull: ## Pull latest wiki changes from remote
+	@echo "$(BOLD)$(BLUE)Pulling latest wiki changes...$(RESET)"
+	@chmod +x scripts/wiki-sync.sh
+	@./scripts/wiki-sync.sh pull
+	@echo "$(BOLD)$(GREEN)✓ Wiki updated from remote$(RESET)"
+
+.PHONY: wiki-update
+wiki-update: ## Full wiki update (clone if needed, sync, and push)
+	@echo "$(BOLD)$(BLUE)Performing full wiki update...$(RESET)"
+	@chmod +x scripts/wiki-sync.sh
+	@./scripts/wiki-sync.sh full
+	@echo "$(BOLD)$(GREEN)✓ Wiki fully updated and pushed$(RESET)"
+
+.PHONY: wiki-status
+wiki-status: ## Show wiki repository status
+	@chmod +x scripts/wiki-sync.sh
+	@./scripts/wiki-sync.sh status
+
+.PHONY: wiki-clean
+wiki-clean: ## Remove wiki directory
+	@echo "$(BOLD)$(RED)Removing wiki directory...$(RESET)"
+	@chmod +x scripts/wiki-sync.sh
+	@./scripts/wiki-sync.sh clean
+	@echo "$(BOLD)$(GREEN)✓ Wiki directory removed$(RESET)"
 
 .DEFAULT_GOAL := help

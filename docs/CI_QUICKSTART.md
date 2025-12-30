@@ -205,9 +205,9 @@ go test -race ./...
 ## Next Steps
 
 - Read the full [CI/CD documentation](CI.md)
-- Review the [golangci-lint configuration](.golangci.yml)
-- Check the [GitHub Actions workflow](.github/workflows/ci.yml)
-- Explore the [pre-commit configuration](.pre-commit-config.yaml)
+- Review the [golangci-lint configuration](../.golangci.yml)
+- Check the [GitHub Actions workflow](../.github/workflows/ci.yml)
+- Explore the [pre-commit configuration](../.pre-commit-config.yaml)
 
 ## Getting Help
 

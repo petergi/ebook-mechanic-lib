@@ -10,6 +10,32 @@ A Go library for validating and repairing EPUB and PDF ebooks, using hexagonal a
 - **Flexible Reporting**: Multiple output formats (JSON, Text, Markdown) with customizable options
 - **Simple API**: Clean, intuitive public API in `pkg/ebmlib`
 
+## Documentation
+
+- `docs/README.md` - Documentation index
+- `docs/USER_GUIDE.md` - CLI and library usage
+- `docs/ARCHITECTURE.md` - System architecture
+- `docs/adr/` - Architecture Decision Records
+
+## Wiki
+
+The GitHub wiki is a mirror of `docs/` in this repository. Edit those files and run:
+
+```bash
+make wiki-update
+```
+
+Other wiki operations:
+
+```bash
+make wiki-clone
+make wiki-sync
+make wiki-push
+make wiki-pull
+make wiki-status
+make wiki-clean
+```
+
 ## Quick Start
 
 ### Installation
@@ -345,7 +371,7 @@ make bench-compare
 | PDF Small | < 1ms | < 200 KB |
 | Reporter (100 errors) | < 1ms | < 500 KB |
 
-See [tests/integration/BENCHMARKS.md](tests/integration/BENCHMARKS.md) for complete baseline metrics.
+See [docs/tests/integration/BENCHMARKS.md](docs/tests/integration/BENCHMARKS.md) for complete baseline metrics.
 
 ## Make Targets
 
