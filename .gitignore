@@ -118,3 +118,7 @@ cpu.prof
 mem.prof
 trace.out
 *.prof
+
+# Wiki repository (managed separately)
+wiki/
+
