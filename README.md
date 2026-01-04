@@ -1,6 +1,6 @@
 # ebm-lib
 
-***This is just me trying to enhance my golang knowledge. If you use this it might work, or it might rip a hole in the fabric of space-time and ruin everyone' plans for the year***
+***This is just me trying to enhance my golang knowledge. If you use this it might work, or it might rip a hole in the fabric of space-time and ruin everyone's plans for the year***
 
 A Go library for validating and repairing EPUB and PDF ebooks, using hexagonal architecture with clean separation of concerns.
 
