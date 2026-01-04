@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/example/project/pkg/ebmlib"
+	"github.com/petergi/ebook-mechanic-lib/pkg/ebmlib"
 )
 
 func main() {

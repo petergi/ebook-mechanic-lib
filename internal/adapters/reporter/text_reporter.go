@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/example/project/internal/domain"
-	"github.com/example/project/internal/ports"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/ports"
 )
 
 // TextReporter formats validation reports as styled plain text.

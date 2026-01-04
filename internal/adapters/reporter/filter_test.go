@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/example/project/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
 )
 
 func TestFilter_Matches(t *testing.T) {

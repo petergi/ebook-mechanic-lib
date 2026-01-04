@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/example/project/internal/adapters/epub"
-	"github.com/example/project/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/epub"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
 )
 
 func TestEPUBValidatorIntegration_ValidMinimal(t *testing.T) {

@@ -87,7 +87,7 @@ Implements EPUB 3 navigation document validation:
 ### Container Validation
 
 ```go
-import "github.com/example/project/internal/adapters/epub"
+import "github.com/petergi/ebook-mechanic-lib/internal/adapters/epub"
 
 validator := epub.NewContainerValidator()
 result, err := validator.ValidateFile("path/to/book.epub")
@@ -113,7 +113,7 @@ for _, rf := range result.Rootfiles {
 ### Navigation Validation
 
 ```go
-import "github.com/example/project/internal/adapters/epub"
+import "github.com/petergi/ebook-mechanic-lib/internal/adapters/epub"
 
 validator := epub.NewNavValidator()
 result, err := validator.ValidateFile("path/to/nav.xhtml")

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/example/project/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
 )
 
 func exitCode(t *testing.T, err error) int {

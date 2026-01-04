@@ -4,7 +4,7 @@ package reporter
 import (
 	"fmt"
 
-	"github.com/example/project/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
 )
 
 const (

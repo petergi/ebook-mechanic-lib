@@ -98,7 +98,7 @@ The validator automatically generates EPUB Accessibility 1.1 metadata:
 ### Basic Validation
 
 ```go
-import "github.com/example/project/internal/adapters/epub"
+import "github.com/petergi/ebook-mechanic-lib/internal/adapters/epub"
 
 validator := epub.NewAccessibilityValidator()
 result, err := validator.ValidateFile("content/chapter01.xhtml")

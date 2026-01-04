@@ -462,7 +462,7 @@ The PDF Repair Service can automatically repair some errors. For complete inform
 ### Using the Repair Service
 
 ```go
-import "github.com/example/project/internal/adapters/pdf"
+import "github.com/petergi/ebook-mechanic-lib/internal/adapters/pdf"
 
 repairService := pdf.NewRepairService()
 validator := pdf.NewStructureValidator()

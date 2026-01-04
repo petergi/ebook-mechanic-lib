@@ -5,13 +5,13 @@ This package provides a simple, high-level API for validating and repairing EPUB
 ## Installation
 
 ```bash
-go get github.com/example/project/pkg/ebmlib
+go get github.com/petergi/ebook-mechanic-lib/pkg/ebmlib
 ```
 
 ## Quick Start
 
 ```go
-import "github.com/example/project/pkg/ebmlib"
+import "github.com/petergi/ebook-mechanic-lib/pkg/ebmlib"
 
 // Validate
 report, err := ebmlib.ValidateEPUB("book.epub")

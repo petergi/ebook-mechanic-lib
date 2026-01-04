@@ -5,7 +5,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/example/project/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
 )
 
 // RepairAction describes a single repair step.

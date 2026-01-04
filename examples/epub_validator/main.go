@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/example/project/internal/adapters/epub"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/epub"
 )
 
 func main() {

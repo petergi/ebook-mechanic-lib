@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/example/project/internal/adapters/pdf"
-	"github.com/example/project/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/pdf"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/example/project/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
 )
 
 // EPUBValidator validates EPUB files and their components.

@@ -7,8 +7,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/example/project/internal/domain"
-	"github.com/example/project/internal/ports"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/ports"
 )
 
 // JSONReporter formats validation reports as JSON.

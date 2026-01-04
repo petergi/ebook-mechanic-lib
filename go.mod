@@ -1,4 +1,4 @@
-module github.com/example/project
+module github.com/petergi/ebook-mechanic-lib
 
 go 1.21
 

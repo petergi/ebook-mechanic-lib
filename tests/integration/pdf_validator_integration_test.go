@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/example/project/internal/adapters/pdf"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/pdf"
 )
 
 func TestPDFValidatorIntegration_ValidMinimal(t *testing.T) {

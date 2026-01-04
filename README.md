@@ -43,7 +43,7 @@ make wiki-clean
 ### Installation
 
 ```bash
-go get github.com/example/project/pkg/ebmlib
+go get github.com/petergi/ebook-mechanic-lib/pkg/ebmlib
 ```
 
 ### Basic Usage
@@ -54,7 +54,7 @@ package main
 import (
     "fmt"
     "log"
-    "github.com/example/project/pkg/ebmlib"
+    "github.com/petergi/ebook-mechanic-lib/pkg/ebmlib"
 )
 
 func main() {

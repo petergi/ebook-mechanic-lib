@@ -1,6 +1,6 @@
 package cli
 
-import "github.com/example/project/internal/domain"
+import "github.com/petergi/ebook-mechanic-lib/internal/domain"
 
 // RepairOptions configures repair behavior.
 type RepairOptions struct {

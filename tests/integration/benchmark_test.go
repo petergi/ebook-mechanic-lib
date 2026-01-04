@@ -18,11 +18,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/example/project/internal/adapters/epub"
-	"github.com/example/project/internal/adapters/pdf"
-	"github.com/example/project/internal/adapters/reporter"
-	"github.com/example/project/internal/domain"
-	"github.com/example/project/internal/ports"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/epub"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/pdf"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/reporter"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/ports"
 )
 
 // EPUB Validation Benchmarks - Various File Sizes

@@ -49,7 +49,7 @@ This adapter follows the hexagonal architecture pattern:
 ### Basic Validation
 
 ```go
-import "github.com/example/project/internal/adapters/pdf"
+import "github.com/petergi/ebook-mechanic-lib/internal/adapters/pdf"
 
 validator := pdf.NewStructureValidator()
 result, err := validator.ValidateFile("document.pdf")

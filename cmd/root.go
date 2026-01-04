@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/example/project/internal/adapters/reporter"
-	"github.com/example/project/internal/cli"
-	"github.com/example/project/internal/ports"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/reporter"
+	"github.com/petergi/ebook-mechanic-lib/internal/cli"
+	"github.com/petergi/ebook-mechanic-lib/internal/ports"
 )
 
 const (

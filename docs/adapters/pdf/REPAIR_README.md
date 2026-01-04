@@ -35,7 +35,7 @@ See [REPAIR_LIMITATIONS.md](./REPAIR_LIMITATIONS.md) for detailed safety analysi
 The PDF repair service is part of the ebm-lib adapters package:
 
 ```go
-import "github.com/example/project/internal/adapters/pdf"
+import "github.com/petergi/ebook-mechanic-lib/internal/adapters/pdf"
 ```
 
 ## Quick Start
@@ -48,7 +48,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/example/project/internal/adapters/pdf"
+    "github.com/petergi/ebook-mechanic-lib/internal/adapters/pdf"
 )
 
 func main() {

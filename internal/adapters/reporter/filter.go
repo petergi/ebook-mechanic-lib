@@ -1,6 +1,6 @@
 package reporter
 
-import "github.com/example/project/internal/domain"
+import "github.com/petergi/ebook-mechanic-lib/internal/domain"
 
 // Filter defines criteria for selecting validation errors.
 type Filter struct {

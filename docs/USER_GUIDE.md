@@ -39,7 +39,7 @@ ebm-lib is a comprehensive Go library for validating and repairing EPUB 3.x and 
 ### Installation
 
 ```bash
-go get github.com/example/project/pkg/ebmlib
+go get github.com/petergi/ebook-mechanic-lib/pkg/ebmlib
 ```
 
 ### CLI Quick Start
@@ -72,7 +72,7 @@ package main
 import (
     "fmt"
     "log"
-    "github.com/example/project/pkg/ebmlib"
+    "github.com/petergi/ebook-mechanic-lib/pkg/ebmlib"
 )
 
 func main() {
@@ -178,7 +178,7 @@ if result.Success {
 import (
     "context"
     "time"
-    "github.com/example/project/pkg/ebmlib"
+    "github.com/petergi/ebook-mechanic-lib/pkg/ebmlib"
 )
 
 // Basic validation

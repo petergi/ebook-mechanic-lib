@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/example/project/internal/adapters/reporter"
-	"github.com/example/project/internal/batch"
-	"github.com/example/project/internal/domain"
-	"github.com/example/project/internal/ports"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/reporter"
+	"github.com/petergi/ebook-mechanic-lib/internal/batch"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/ports"
 )
 
 type progressStyle struct {

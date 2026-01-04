@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/example/project/internal/adapters/reporter"
-	"github.com/example/project/internal/domain"
-	"github.com/example/project/internal/ports"
-	"github.com/example/project/pkg/ebmlib"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/reporter"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/ports"
+	"github.com/petergi/ebook-mechanic-lib/pkg/ebmlib"
 )
 
 // ExitCode values represent CLI process results.

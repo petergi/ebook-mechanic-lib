@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/example/project/internal/domain"
-	"github.com/example/project/internal/ports"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/ports"
 )
 
 const (

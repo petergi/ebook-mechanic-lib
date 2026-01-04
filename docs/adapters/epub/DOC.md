@@ -30,7 +30,7 @@ Implementation of EPUB validation according to the EPUB specifications.
 ## Usage
 
 ```go
-import "github.com/example/project/internal/adapters/epub"
+import "github.com/petergi/ebook-mechanic-lib/internal/adapters/epub"
 
 validator := epub.NewContainerValidator()
 
@@ -178,7 +178,7 @@ Implementation of navigation document validation for EPUB 3 files according to t
 ## Usage
 
 ```go
-import "github.com/example/project/internal/adapters/epub"
+import "github.com/petergi/ebook-mechanic-lib/internal/adapters/epub"
 
 validator := epub.NewNavValidator()
 

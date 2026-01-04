@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/example/project/internal/adapters/epub"
+	"github.com/petergi/ebook-mechanic-lib/internal/adapters/epub"
 )
 
 func TestContainerValidator_Integration(t *testing.T) {

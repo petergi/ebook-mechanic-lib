@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/example/project/internal/domain"
+	"github.com/petergi/ebook-mechanic-lib/internal/domain"
 )
 
 func TestNewColorScheme_Enabled(t *testing.T) {

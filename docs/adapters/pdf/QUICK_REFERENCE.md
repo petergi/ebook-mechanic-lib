@@ -3,7 +3,7 @@
 ## One-Minute Start
 
 ```go
-import "github.com/example/project/internal/adapters/pdf"
+import "github.com/petergi/ebook-mechanic-lib/internal/adapters/pdf"
 
 // Create service
 service := pdf.NewRepairService()
