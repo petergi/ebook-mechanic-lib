@@ -10,6 +10,7 @@ All project documentation lives under `docs/`. Use this index to find the right 
 ## Architecture
 - `docs/ARCHITECTURE.md` - Hexagonal architecture overview and system flow
 - `docs/adr/` - Architecture Decision Records (one decision per file)
+- [ADR Index](ADR-Index) - Architecture Decision Records (wiki page)
 
 ## Wiki
 - `docs/` - GitHub wiki source (sync with `make wiki-update`)
