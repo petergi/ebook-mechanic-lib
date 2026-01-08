@@ -263,6 +263,21 @@ func PreviewEPUBRepair(filePath string) (*RepairPreview, error) {
 	return PreviewEPUBRepairWithContext(context.Background(), filePath)
 }
 
+// PreviewEPUBRepairWithOptions generates a preview of repair actions with options.
+func PreviewEPUBRepairWithOptions(ctx context.Context, filePath string, opts RepairOptions) (*RepairPreview, error) {
+	report, err := ValidateEPUBWithContext(ctx, filePath)
+	if err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	repairService := epub.NewRepairService()
+	if impl, ok := repairService.(*epub.RepairServiceImpl); ok {
+		return impl.PreviewWithOptions(ctx, report, epub.RepairOptions{Aggressive: opts.Aggressive})
+	}
+
+	return repairService.Preview(ctx, report)
+}
+
 // PreviewEPUBRepairWithContext generates a repair preview with context support.
 func PreviewEPUBRepairWithContext(ctx context.Context, filePath string) (*RepairPreview, error) {
 	report, err := ValidateEPUBWithContext(ctx, filePath)

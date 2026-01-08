@@ -331,6 +331,7 @@ func TestCanRepair(t *testing.T) {
 	repairableCodes := []string{
 		ErrorCodePDFTrailer003,
 		ErrorCodePDFTrailer001,
+		ErrorCodePDFCatalog003,
 	}
 
 	for _, code := range repairableCodes {
@@ -489,6 +490,72 @@ func TestApply_RecomputeStartxref(t *testing.T) {
 
 	if !strings.Contains(string(repairedData), "startxref") {
 		t.Error("startxref keyword not found in repaired file")
+	}
+}
+
+func TestApply_FixCatalogPages(t *testing.T) {
+	service := NewRepairService()
+	ctx := context.Background()
+
+	tempDir := t.TempDir()
+	testPDF := filepath.Join(tempDir, "test.pdf")
+
+	pdfContent := []byte(`%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+>>
+endobj
+xref
+0 2
+0000000000 65535 f 
+0000000009 00000 n 
+trailer
+<<
+/Size 2
+/Root 1 0 R
+>>
+%%EOF
+`)
+	if err := os.WriteFile(testPDF, pdfContent, 0600); err != nil {
+		t.Fatalf("Failed to create test PDF: %v", err)
+	}
+
+	preview := &ports.RepairPreview{
+		Actions: []ports.RepairAction{
+			{
+				Type:        "fix_catalog_pages",
+				Description: "Fix catalog pages",
+				Target:      "catalog",
+				Automated:   true,
+			},
+		},
+		CanAutoRepair:  true,
+		BackupRequired: true,
+	}
+
+	result, err := service.Apply(ctx, testPDF, preview)
+	if err != nil {
+		t.Fatalf("Apply failed: %v", err)
+	}
+
+	if !result.Success {
+		t.Errorf("Expected success, got error: %v", result.Error)
+	}
+
+	repairedData, err := os.ReadFile(result.BackupPath)
+	if err != nil {
+		t.Fatalf("Failed to read repaired file: %v", err)
+	}
+
+	if !bytes.Contains(repairedData, []byte("/Pages")) {
+		t.Error("Expected /Pages entry in catalog")
+	}
+	if !bytes.Contains(repairedData, []byte("xref")) {
+		t.Error("Expected xref table in repaired file")
+	}
+	if !bytes.Contains(repairedData, []byte("startxref")) {
+		t.Error("Expected startxref in repaired file")
 	}
 }
 

@@ -203,6 +203,7 @@ The strategies focus on the **most common real-world EPUB validation issues** (b
 - **Always** offer **dry-run/preview mode** — show proposed changes without modifying the original file
 - Generate **repair report** (diff-like summary or list of changes)
 - Create repaired file with suffix (e.g. `_repaired.epub`) or in a temp directory
+- Allow an opt-in aggressive mode for high-risk repairs that may drop content
 - **Never** auto-alter semantic content (text, images, chapter order) without explicit user consent
 - Log every attempted/skipped repair with reason
 - Use ZIP manipulation carefully (Go's `archive/zip` + temp files recommended)
@@ -257,4 +258,3 @@ The strategies focus on the **most common real-world EPUB validation issues** (b
 
 This table covers ~80-90% of real-world EPUB repair scenarios encountered in practice (mimetype, paths, metadata, basic well-formedness).  
 More invasive repairs (full HTML parsing & semantic fixing) should remain optional/advanced features.
-

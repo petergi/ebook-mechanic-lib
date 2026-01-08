@@ -206,7 +206,7 @@ err := repairService.RestoreBackup(ctx, backupPath, originalPath)
 
 Restores a file from backup.
 
-**Note:** `BackupPath` is the output path when using `ApplyWithBackup`. When using the CLI with `--in-place --backup`, the CLI reports the repaired output path separately from the backup of the original.
+**Note:** `BackupPath` is the output path when using `ApplyWithBackup`. The CLI repairs in place by default and writes an `_original` backup; use `--no-backup` to skip the backup.
 
 ### High-Level Repair Functions
 

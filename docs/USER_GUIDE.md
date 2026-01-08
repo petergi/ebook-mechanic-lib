@@ -51,8 +51,11 @@ ebm-cli book.epub
 # Validate explicitly
 ebm-cli validate document.pdf --format json --min-severity warning
 
-# Repair in place with backup
-ebm-cli repair broken.epub --in-place --backup
+# Repair in place with backup (default)
+ebm-cli repair broken.epub
+
+# Repair without backup and with aggressive mode
+ebm-cli repair broken.epub --no-backup --aggressive
 
 # Batch validate with progress
 ebm-cli batch validate ./library --jobs 8 --progress simple
@@ -570,9 +573,9 @@ The following require manual intervention or specialized tools:
 
 ### Repair Output Paths
 
-- **Default output**: writes `<file>.repaired.<ext>` (leaves original untouched)
-- **In-place**: `--in-place` replaces the original file
-- **Backup**: `--backup` keeps a copy of the original (optionally `--backup-dir`)
+- **Library default**: writes `<file>.repaired.<ext>` when using `ebmlib.RepairEPUB/PDF`
+- **CLI default**: repairs in place and writes an `_original` backup
+- **No backup**: `--no-backup` skips the original backup in the CLI
 - **Repaired status**: CLI reports `Repaired: true` only when the post-repair validation is clean
 
 ### Repair Safety Levels

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/petergi/ebook-mechanic-lib/internal/domain"
@@ -119,7 +120,8 @@ func (r *RepairServiceImpl) CanRepair(_ context.Context, err *domain.ValidationE
 
 	switch err.Code {
 	case ErrorCodePDFTrailer003,
-		ErrorCodePDFTrailer001:
+		ErrorCodePDFTrailer001,
+		ErrorCodePDFCatalog003:
 		return true
 	default:
 		return false
@@ -225,6 +227,15 @@ func (r *RepairServiceImpl) generateRepairActions(err *domain.ValidationError) [
 			Automated:   true,
 		})
 
+	case ErrorCodePDFCatalog003:
+		actions = append(actions, ports.RepairAction{
+			Type:        "fix_catalog_pages",
+			Description: "Add missing /Pages entry to catalog and rebuild xref",
+			Target:      "catalog",
+			Details:     map[string]interface{}{},
+			Automated:   true,
+		})
+
 	case ErrorCodePDFHeader001,
 		ErrorCodePDFHeader002:
 		actions = append(actions, ports.RepairAction{
@@ -251,8 +262,7 @@ func (r *RepairServiceImpl) generateRepairActions(err *domain.ValidationError) [
 		})
 
 	case ErrorCodePDFCatalog001,
-		ErrorCodePDFCatalog002,
-		ErrorCodePDFCatalog003:
+		ErrorCodePDFCatalog002:
 		actions = append(actions, ports.RepairAction{
 			Type:        "manual_catalog_fix",
 			Description: "Catalog repair requires manual intervention (unsafe)",
@@ -304,6 +314,13 @@ func (r *RepairServiceImpl) applyRepairs(_ context.Context, repairCtx *repairCon
 
 	for _, action := range actionsByType["fix_trailer_typos"] {
 		r.fixTrailerTypos(repairCtx)
+		repairCtx.applied = append(repairCtx.applied, action)
+	}
+
+	for _, action := range actionsByType["fix_catalog_pages"] {
+		if err := r.fixCatalogPages(repairCtx); err != nil {
+			return err
+		}
 		repairCtx.applied = append(repairCtx.applied, action)
 	}
 
@@ -387,6 +404,91 @@ func (r *RepairServiceImpl) fixTrailerTypos(repairCtx *repairContext) {
 			return []byte(strings.Replace(string(match), "/root", "/Root", 1))
 		})
 	}
+}
+
+func (r *RepairServiceImpl) fixCatalogPages(repairCtx *repairContext) error {
+	data := repairCtx.data
+	if len(data) == 0 {
+		return fmt.Errorf("empty PDF data")
+	}
+
+	baseData := data
+	if idx := bytes.LastIndex(data, []byte("\nxref")); idx != -1 {
+		baseData = data[:idx]
+	} else if idx := bytes.LastIndex(data, []byte("xref")); idx != -1 {
+		baseData = data[:idx]
+	}
+
+	baseStr := string(baseData)
+	catalogRe := regexp.MustCompile(`(?s)(\d+)\s+0\s+obj\s*<<.*?/Type\s*/Catalog.*?>>\s*endobj`)
+	loc := catalogRe.FindStringSubmatchIndex(baseStr)
+	if loc == nil {
+		return fmt.Errorf("catalog object not found")
+	}
+
+	catalogObjNum, err := strconv.Atoi(baseStr[loc[2]:loc[3]])
+	if err != nil {
+		return fmt.Errorf("failed to parse catalog object number: %w", err)
+	}
+
+	objStr := baseStr[loc[0]:loc[1]]
+	if strings.Contains(objStr, "/Pages") {
+		return nil
+	}
+
+	maxObjNum := catalogObjNum
+	objRe := regexp.MustCompile(`(?m)^(\d+)\s+0\s+obj`)
+	for _, match := range objRe.FindAllStringSubmatch(baseStr, -1) {
+		num, err := strconv.Atoi(match[1])
+		if err == nil && num > maxObjNum {
+			maxObjNum = num
+		}
+	}
+	pagesObjNum := maxObjNum + 1
+
+	dictEnd := strings.LastIndex(objStr, ">>")
+	if dictEnd == -1 {
+		return fmt.Errorf("catalog dictionary end not found")
+	}
+	injected := objStr[:dictEnd] + fmt.Sprintf("\n/Pages %d 0 R\n", pagesObjNum) + objStr[dictEnd:]
+	baseStr = baseStr[:loc[0]] + injected + baseStr[loc[1]:]
+
+	pagesObj := fmt.Sprintf("\n%d 0 obj\n<<\n/Type /Pages\n/Kids []\n/Count 0\n>>\nendobj\n", pagesObjNum)
+	baseStr += pagesObj
+
+	offsets := make(map[int]int)
+	maxObj := 0
+	for _, m := range objRe.FindAllStringSubmatchIndex(baseStr, -1) {
+		num, err := strconv.Atoi(baseStr[m[2]:m[3]])
+		if err != nil {
+			continue
+		}
+		offsets[num] = m[0]
+		if num > maxObj {
+			maxObj = num
+		}
+	}
+	if maxObj < pagesObjNum {
+		maxObj = pagesObjNum
+	}
+
+	var xref strings.Builder
+	xref.WriteString("xref\n")
+	xref.WriteString(fmt.Sprintf("0 %d\n", maxObj+1))
+	xref.WriteString("0000000000 65535 f \n")
+	for i := 1; i <= maxObj; i++ {
+		if off, ok := offsets[i]; ok {
+			xref.WriteString(fmt.Sprintf("%010d 00000 n \n", off))
+		} else {
+			xref.WriteString("0000000000 00000 f \n")
+		}
+	}
+
+	trailer := fmt.Sprintf("trailer\n<<\n/Size %d\n/Root %d 0 R\n>>\n", maxObj+1, catalogObjNum)
+	startxref := len([]byte(baseStr))
+	final := baseStr + xref.String() + trailer + fmt.Sprintf("startxref\n%d\n%%%%EOF\n", startxref)
+	repairCtx.data = []byte(final)
+	return nil
 }
 
 func (r *RepairServiceImpl) generateOutputPath(filePath string) string {

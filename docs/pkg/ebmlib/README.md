@@ -57,6 +57,7 @@ RepairEPUB(filePath string) (*RepairResult, error)
 RepairEPUBWithContext(ctx context.Context, filePath string) (*RepairResult, error)
 PreviewEPUBRepair(filePath string) (*RepairPreview, error)
 PreviewEPUBRepairWithContext(ctx context.Context, filePath string) (*RepairPreview, error)
+PreviewEPUBRepairWithOptions(ctx context.Context, filePath string, opts RepairOptions) (*RepairPreview, error)
 RepairEPUBWithPreview(filePath string, preview *RepairPreview, outputPath string) (*RepairResult, error)
 RepairEPUBWithPreviewContext(ctx context.Context, filePath string, preview *RepairPreview, outputPath string) (*RepairResult, error)
 ```
@@ -143,6 +144,14 @@ type RepairPreview struct {
     EstimatedTime  int64
     BackupRequired bool
     Warnings       []string
+}
+```
+
+### RepairOptions
+
+```go
+type RepairOptions struct {
+    Aggressive bool
 }
 ```
 

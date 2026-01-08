@@ -172,6 +172,201 @@ func TestPreview_MimetypeNotFirst(t *testing.T) {
 	}
 }
 
+func TestPreview_OPFMissingNavDocument(t *testing.T) {
+	service := NewRepairService()
+	ctx := context.Background()
+
+	report := &domain.ValidationReport{
+		FilePath: "test.epub",
+		FileType: "EPUB",
+		IsValid:  false,
+		Errors: []domain.ValidationError{
+			{
+				Code:    ErrorCodeOPFMissingNavDocument,
+				Message: "OPF manifest must contain at least one item with properties='nav'",
+				Location: &domain.ErrorLocation{
+					Path: "OEBPS/content.opf",
+				},
+			},
+		},
+		ValidationTime: time.Now(),
+	}
+
+	preview, err := service.Preview(ctx, report)
+	if err != nil {
+		t.Fatalf("Preview failed: %v", err)
+	}
+
+	if len(preview.Actions) != 1 {
+		t.Fatalf("Expected 1 action, got %d", len(preview.Actions))
+	}
+
+	action := preview.Actions[0]
+	if action.Type != "add_nav_document" {
+		t.Errorf("Expected action type 'add_nav_document', got '%s'", action.Type)
+	}
+
+	if !action.Automated {
+		t.Error("Expected nav document repair to be automated")
+	}
+}
+
+func TestPreview_OPFFileNotFound(t *testing.T) {
+	service := NewRepairService()
+	ctx := context.Background()
+
+	report := &domain.ValidationReport{
+		FilePath: "test.epub",
+		FileType: "EPUB",
+		IsValid:  false,
+		Errors: []domain.ValidationError{
+			{
+				Code:    ErrorCodeOPFFileNotFound,
+				Message: "Failed to read OPF file at OEBPS/content.opf: file not found",
+				Location: &domain.ErrorLocation{
+					Path: "OEBPS/content.opf",
+				},
+			},
+		},
+		ValidationTime: time.Now(),
+	}
+
+	preview, err := service.Preview(ctx, report)
+	if err != nil {
+		t.Fatalf("Preview failed: %v", err)
+	}
+
+	if len(preview.Actions) != 1 {
+		t.Fatalf("Expected 1 action, got %d", len(preview.Actions))
+	}
+
+	action := preview.Actions[0]
+	if action.Type != "create_opf" {
+		t.Errorf("Expected action type 'create_opf', got '%s'", action.Type)
+	}
+
+	if !action.Automated {
+		t.Error("Expected OPF creation to be automated")
+	}
+}
+
+func TestPreview_NavMissing(t *testing.T) {
+	service := NewRepairService()
+	ctx := context.Background()
+
+	report := &domain.ValidationReport{
+		FilePath: "test.epub",
+		FileType: "EPUB",
+		IsValid:  false,
+		Errors: []domain.ValidationError{
+			{
+				Code:    ErrorCodeNavMissingNavElement,
+				Message: "Navigation document must contain at least one <nav> element",
+				Location: &domain.ErrorLocation{
+					Path: "OEBPS/nav.xhtml",
+				},
+			},
+		},
+		ValidationTime: time.Now(),
+	}
+
+	preview, err := service.Preview(ctx, report)
+	if err != nil {
+		t.Fatalf("Preview failed: %v", err)
+	}
+
+	if len(preview.Actions) != 1 {
+		t.Fatalf("Expected 1 action, got %d", len(preview.Actions))
+	}
+
+	action := preview.Actions[0]
+	if action.Type != "repair_nav_document" {
+		t.Errorf("Expected action type 'repair_nav_document', got '%s'", action.Type)
+	}
+
+	if !action.Automated {
+		t.Error("Expected nav repair to be automated")
+	}
+}
+
+func TestPreview_ContentStructureRepair(t *testing.T) {
+	service := NewRepairService()
+	ctx := context.Background()
+
+	report := &domain.ValidationReport{
+		FilePath: "test.epub",
+		FileType: "EPUB",
+		IsValid:  false,
+		Errors: []domain.ValidationError{
+			{
+				Code:    ErrorCodeContentInvalidNamespace,
+				Message: "HTML element must have correct XHTML namespace",
+				Location: &domain.ErrorLocation{
+					Path: "OEBPS/content.xhtml",
+				},
+			},
+		},
+		ValidationTime: time.Now(),
+	}
+
+	preview, err := service.Preview(ctx, report)
+	if err != nil {
+		t.Fatalf("Preview failed: %v", err)
+	}
+
+	if len(preview.Actions) != 1 {
+		t.Fatalf("Expected 1 action, got %d", len(preview.Actions))
+	}
+
+	action := preview.Actions[0]
+	if action.Type != "repair_content_structure" {
+		t.Errorf("Expected action type 'repair_content_structure', got '%s'", action.Type)
+	}
+
+	if !action.Automated {
+		t.Error("Expected content structure repair to be automated")
+	}
+}
+
+func TestPreview_OPFInvalidUniqueID(t *testing.T) {
+	service := NewRepairService()
+	ctx := context.Background()
+
+	report := &domain.ValidationReport{
+		FilePath: "test.epub",
+		FileType: "EPUB",
+		IsValid:  false,
+		Errors: []domain.ValidationError{
+			{
+				Code:    ErrorCodeOPFInvalidUniqueID,
+				Message: "unique-identifier 'uid' does not match any dc:identifier id",
+				Location: &domain.ErrorLocation{
+					Path: "OEBPS/content.opf",
+				},
+			},
+		},
+		ValidationTime: time.Now(),
+	}
+
+	preview, err := service.Preview(ctx, report)
+	if err != nil {
+		t.Fatalf("Preview failed: %v", err)
+	}
+
+	if len(preview.Actions) != 1 {
+		t.Fatalf("Expected 1 action, got %d", len(preview.Actions))
+	}
+
+	action := preview.Actions[0]
+	if action.Type != "fix_opf_unique_id" {
+		t.Errorf("Expected action type 'fix_opf_unique_id', got '%s'", action.Type)
+	}
+
+	if !action.Automated {
+		t.Error("Expected unique-identifier fix to be automated")
+	}
+}
+
 func TestPreview_ContainerXMLMissing(t *testing.T) {
 	service := NewRepairService()
 	ctx := context.Background()
@@ -390,10 +585,20 @@ func TestCanRepair(t *testing.T) {
 		ErrorCodeMimetypeNotFirst,
 		ErrorCodeContainerXMLMissing,
 		ErrorCodeContentMissingDoctype,
+		ErrorCodeContentMissingHTML,
+		ErrorCodeContentMissingHead,
+		ErrorCodeContentMissingBody,
+		ErrorCodeContentInvalidNamespace,
 		ErrorCodeOPFMissingTitle,
 		ErrorCodeOPFMissingIdentifier,
 		ErrorCodeOPFMissingLanguage,
 		ErrorCodeOPFMissingModified,
+		ErrorCodeOPFMissingNavDocument,
+		ErrorCodeOPFInvalidUniqueID,
+		ErrorCodeNavMissingNavElement,
+		ErrorCodeNavMissingTOC,
+		ErrorCodeNavInvalidTOCStructure,
+		ErrorCodeOPFFileNotFound,
 	}
 
 	for _, code := range repairableCodes {
@@ -527,6 +732,10 @@ func TestApply_DoctypeAddition(t *testing.T) {
 
 	if !result.Success {
 		t.Errorf("Expected success, got error: %v", result.Error)
+	}
+
+	if err := verifyMimetypeInEPUB(result.BackupPath); err != nil {
+		t.Errorf("Mimetype verification failed: %v", err)
 	}
 
 	content, err := readFileFromEPUB(result.BackupPath, contentPath)
