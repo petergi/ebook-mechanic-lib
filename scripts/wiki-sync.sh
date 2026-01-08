@@ -7,7 +7,7 @@ set -e
 # ==================== Configuration ====================
 WIKI_DIR="wiki"
 DOCS_DIR="docs"
-WIKI_REMOTE="https://github.com/petergi/ebm-lib.wiki.git"
+WIKI_REMOTE="https://github.com/petergi/ebook-mechanic-lib.wiki.git"
 
 # ==================== Helper Functions ====================
 log_info() { echo "[INFO] $1"; }
@@ -23,6 +23,13 @@ clone_wiki() {
             rm -rf "$WIKI_DIR"
         else
             log_warning "Wiki directory already exists, skipping clone"
+            if git -C "$WIKI_DIR" remote get-url origin >/dev/null 2>&1; then
+                current_remote=$(git -C "$WIKI_DIR" remote get-url origin)
+                if [ "$current_remote" != "$WIKI_REMOTE" ]; then
+                    log_warning "Wiki remote differs; updating origin to $WIKI_REMOTE"
+                    git -C "$WIKI_DIR" remote set-url origin "$WIKI_REMOTE"
+                fi
+            fi
             return 0
         fi
     fi
