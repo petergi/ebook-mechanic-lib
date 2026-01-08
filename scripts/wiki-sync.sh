@@ -54,6 +54,11 @@ sync_docs() {
     log_info "Syncing docs content..."
     rsync -av --delete --exclude ".git" "$DOCS_DIR/" "$WIKI_DIR/"
 
+    if [ -d "$DOCS_DIR/adr" ]; then
+        log_info "Copying ADRs to wiki root..."
+        find "$DOCS_DIR/adr" -maxdepth 1 -type f -name 'ADR-*.md' -exec cp {} "$WIKI_DIR/" \;
+    fi
+
     # Ensure Home page exists
     if [ -f "$DOCS_DIR/README.md" ]; then
         log_info "Creating Home.md from docs/README.md..."
@@ -64,6 +69,10 @@ sync_docs() {
     fi
 
     create_sidebar
+
+    if [ -f "$WIKI_DIR/ADR-Index.md" ]; then
+        perl -pi -e 's|\(adr/|\(|g' "$WIKI_DIR/ADR-Index.md"
+    fi
 
     log_success "Documentation sync complete"
 }
@@ -80,7 +89,7 @@ create_sidebar() {
 * **[Error Codes](ERROR_CODES)** - Validation and repair codes
 
 ### Architecture
-* **[Architecture](Architecture)** - System design
+* **[Architecture](ARCHITECTURE)** - System design
 * **[ADR Index](ADR-Index)** - Architecture Decision Records
 
 ### Validation and Repair
