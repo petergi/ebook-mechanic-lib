@@ -275,6 +275,49 @@ func TestOPFValidator_ValidateBytes(t *testing.T) {
 			expectedCode: ErrorCodeOPFMissingNavDocument,
 		},
 		{
+			name: "epub2 missing ncx item",
+			opfContent: `<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="book-id">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>Test Book</dc:title>
+    <dc:identifier id="book-id">urn:isbn:123456789</dc:identifier>
+    <dc:language>en</dc:language>
+    <meta property="dcterms:modified">2024-01-01T00:00:00Z</meta>
+  </metadata>
+  <manifest>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+    <item id="chapter1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>
+  </manifest>
+  <spine toc="ncx">
+    <itemref idref="chapter1"/>
+  </spine>
+</package>`,
+			expectValid:  false,
+			expectedCode: ErrorCodeOPFMissingNCX,
+		},
+		{
+			name: "epub2 missing spine toc reference",
+			opfContent: `<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="book-id">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>Test Book</dc:title>
+    <dc:identifier id="book-id">urn:isbn:123456789</dc:identifier>
+    <dc:language>en</dc:language>
+    <meta property="dcterms:modified">2024-01-01T00:00:00Z</meta>
+  </metadata>
+  <manifest>
+    <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="chapter1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>
+  </manifest>
+  <spine>
+    <itemref idref="chapter1"/>
+  </spine>
+</package>`,
+			expectValid:  false,
+			expectedCode: ErrorCodeOPFInvalidSpineTOC,
+		},
+		{
 			name: "manifest item with empty id",
 			opfContent: `<?xml version="1.0"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id">
@@ -707,6 +750,8 @@ func TestOPFErrorCodes(t *testing.T) {
 		{"Invalid Package", ErrorCodeOPFInvalidPackage, "EPUB-OPF-013"},
 		{"Duplicate ID", ErrorCodeOPFDuplicateID, "EPUB-OPF-014"},
 		{"File Not Found", ErrorCodeOPFFileNotFound, "EPUB-OPF-015"},
+		{"Missing NCX", ErrorCodeOPFMissingNCX, "EPUB-OPF-016"},
+		{"Invalid Spine TOC", ErrorCodeOPFInvalidSpineTOC, "EPUB-OPF-017"},
 	}
 
 	for _, tt := range tests {

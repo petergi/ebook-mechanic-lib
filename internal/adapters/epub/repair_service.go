@@ -389,6 +389,26 @@ func (r *RepairServiceImpl) generateRepairActions(err *domain.ValidationError, o
 			Automated:   true,
 		})
 
+	case ErrorCodeOPFInvalidSpineTOC:
+		ncxID, _ := err.Details["ncx_id"].(string)
+		if ncxID != "" {
+			actions = append(actions, ports.RepairAction{
+				Type:        "fix_spine_toc",
+				Description: "Set OPF spine toc attribute to reference the NCX item",
+				Target:      err.Location.Path,
+				Details:     map[string]interface{}{"ncx_id": ncxID},
+				Automated:   true,
+			})
+		} else {
+			actions = append(actions, ports.RepairAction{
+				Type:        "manual_review",
+				Description: fmt.Sprintf("Requires manual review: %s", err.Message),
+				Target:      err.Location.Path,
+				Details:     err.Details,
+				Automated:   false,
+			})
+		}
+
 	case ErrorCodeOPFInvalidSpineItem,
 		ErrorCodeOPFMissingSpine,
 		ErrorCodeOPFInvalidManifestItem,
@@ -528,7 +548,7 @@ func (r *RepairServiceImpl) applyRepairs(_ context.Context, repairCtx *repairCon
 
 	opfActions := make(map[string][]ports.RepairAction)
 	for _, actionType := range []string{"add_metadata_title", "add_metadata_identifier",
-		"add_metadata_language", "add_metadata_modified", "add_nav_document", "fix_opf_unique_id"} {
+		"add_metadata_language", "add_metadata_modified", "add_nav_document", "fix_opf_unique_id", "fix_spine_toc"} {
 		for _, action := range actionsByType[actionType] {
 			opfActions[action.Target] = append(opfActions[action.Target], action)
 		}
@@ -906,6 +926,16 @@ func (r *RepairServiceImpl) repairOPF(data []byte, actions []ports.RepairAction,
 		normalizeUniqueIdentifier(&pkg)
 	}
 
+	if actionTypes["fix_spine_toc"] {
+		ncxID := extractRepairDetail(actions, "ncx_id")
+		if ncxID == "" {
+			ncxID = findFirstNCXID(&pkg)
+		}
+		if ncxID != "" {
+			pkg.Spine.Toc = ncxID
+		}
+	}
+
 	if actionTypes["add_nav_document"] {
 		if err := ensureNavItem(&pkg, navHref); err != nil {
 			return nil, err
@@ -925,6 +955,27 @@ func (r *RepairServiceImpl) repairOPF(data []byte, actions []ports.RepairAction,
 	}
 
 	return buf.Bytes(), nil
+}
+
+func extractRepairDetail(actions []ports.RepairAction, key string) string {
+	for _, action := range actions {
+		if action.Details == nil {
+			continue
+		}
+		if value, ok := action.Details[key].(string); ok {
+			return value
+		}
+	}
+	return ""
+}
+
+func findFirstNCXID(pkg *Package) string {
+	for _, item := range pkg.Manifest.Items {
+		if strings.EqualFold(strings.TrimSpace(item.MediaType), "application/x-dtbncx+xml") {
+			return item.ID
+		}
+	}
+	return ""
 }
 
 type navPlan struct {

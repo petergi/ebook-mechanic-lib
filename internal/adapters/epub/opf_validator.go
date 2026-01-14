@@ -27,6 +27,8 @@ const (
 	ErrorCodeOPFInvalidPackage      = "EPUB-OPF-013"
 	ErrorCodeOPFDuplicateID         = "EPUB-OPF-014"
 	ErrorCodeOPFFileNotFound        = "EPUB-OPF-015"
+	ErrorCodeOPFMissingNCX          = "EPUB-OPF-016"
+	ErrorCodeOPFInvalidSpineTOC     = "EPUB-OPF-017"
 )
 
 // OPF namespace constants.
@@ -94,6 +96,7 @@ type ManifestItem struct {
 // Spine describes the reading order.
 type Spine struct {
 	XMLName xml.Name    `xml:"spine"`
+	Toc     string      `xml:"toc,attr,omitempty"`
 	Items   []SpineItem `xml:"itemref"`
 }
 
@@ -434,6 +437,60 @@ func (v *OPFValidator) validateSpine(spine *Spine, manifest *Manifest, result *O
 			})
 		}
 	}
+
+	if result.Package != nil && isEPUB2(result.Package.Version) {
+		v.validateNCXReference(spine, manifest, result)
+	}
+}
+
+func (v *OPFValidator) validateNCXReference(spine *Spine, manifest *Manifest, result *OPFValidationResult) {
+	ncxIDs := make([]string, 0)
+	for _, item := range manifest.Items {
+		if strings.EqualFold(strings.TrimSpace(item.MediaType), "application/x-dtbncx+xml") {
+			if strings.TrimSpace(item.ID) != "" {
+				ncxIDs = append(ncxIDs, item.ID)
+			}
+		}
+	}
+
+	if len(ncxIDs) == 0 {
+		result.Valid = false
+		result.Errors = append(result.Errors, ValidationError{
+			Code:    ErrorCodeOPFMissingNCX,
+			Message: "EPUB 2 package must include an NCX item in the manifest",
+			Details: map[string]interface{}{
+				"media_type": "application/x-dtbncx+xml",
+			},
+		})
+		return
+	}
+
+	toc := strings.TrimSpace(spine.Toc)
+	if toc == "" || !stringInSlice(toc, ncxIDs) {
+		result.Valid = false
+		result.Errors = append(result.Errors, ValidationError{
+			Code:    ErrorCodeOPFInvalidSpineTOC,
+			Message: "EPUB 2 spine must reference the NCX item via the toc attribute",
+			Details: map[string]interface{}{
+				"toc":     toc,
+				"ncx_id":  ncxIDs[0],
+				"ncx_ids": ncxIDs,
+			},
+		})
+	}
+}
+
+func isEPUB2(version string) bool {
+	return strings.HasPrefix(strings.TrimSpace(version), "2")
+}
+
+func stringInSlice(value string, values []string) bool {
+	for _, v := range values {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }
 
 // ValidateBytesReader validates OPF data from an io.ReaderAt.
